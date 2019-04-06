@@ -19,7 +19,8 @@
         }
     },
     "require-dev": {
-        "phpunit/phpunit": "^8.0"
+        "phpunit/phpunit": "^8.0",
+        "pds/skeleton": "^1.0"
     },
     "bin": [
         "bin/autoroute-dump.php"
