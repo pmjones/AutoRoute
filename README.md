@@ -27,6 +27,18 @@ cases -- even when FastRoute is using cached route definitions.
 > [Symfony](https://github.com/symfony/Routing),
 > [Zend](https://github.com/zendframework/zend-router), etc.
 
+**Contents**
+
+- [Motivation](#motivation)
+- [Examples](#examples)
+- [How It Works](#how-it-works)
+- [Usage](#usage)
+- [Generating Route Paths](#generating-route-paths)
+- [Alternative Configurations](#alternative-configurations)
+- [Dumping All Routes](#dumping-all-routes)
+- [Questions and Recipes](#questions-and-recipes)
+
+
 ## Motivation
 
 Regular-expression (regex) routers generally duplicate important information
