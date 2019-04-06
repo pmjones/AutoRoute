@@ -11,8 +11,10 @@ recognized namespace and with the recognized action method name, automatically
 makes it available as a route. No more managing a routes file to keep it in
 sync with your action classes!
 
-AutoRoute is fast. In fact, it is faster than FastRoute in common
+AutoRoute is fast. In fact, it is [faster than FastRoute][benchmark] in common
 cases -- even when FastRoute is using cached route definitions.
+
+  [benchmark]: https://github.com/pmjones/AutoRoute-benchmark
 
 > **Note:**
 >
