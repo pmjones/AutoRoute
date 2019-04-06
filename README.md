@@ -134,8 +134,7 @@ Likewise, `App\Http\Photos\GetPhotos` will be the action class for `GET /photos[
 
 And `App\Http\Photo\Edit\GetPhotoEdit` will be the action class for `GET /photo[/*]/edit`.
 
-Note that at the URL root path, the base namespace is ignored as far as these
-rules are concerned; thus, `App\Http\Get` will be the action class for `GET /`.
+Finally, at the URL root path, `App\Http\Get` will be the action class for `GET /`.
 
 ### Dynamic Parameters
 
