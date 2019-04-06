@@ -1,0 +1,27 @@
+{
+    "name": "pmjones/auto-route",
+    "type": "library",
+    "description": "Automatically routes HTTP request to action classes.",
+    "keywords": [ "route", "router", "routing", "action", "adr" ],
+    "homepage": "http://github.com/pmjones/auto-route",
+    "license": "MIT",
+    "require": {
+        "php": ">=7.2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "AutoRoute\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "AutoRoute\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^8.0"
+    },
+    "bin": [
+        "bin/dump-routes.php"
+    ]
+}
