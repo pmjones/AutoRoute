@@ -453,7 +453,7 @@ GET     /photos[/{int:page}]
         App\Http\Photos\GetPhotos
 ```
 
-You can specify an alternative configurations with these command line options:
+You can specify alternative configurations with these command line options:
 
 - `--base-url=` to set the base URL
 - `--ignore-params=` to ignore a number of leading method parameters
