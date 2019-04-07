@@ -423,11 +423,11 @@ $response = call_user_func($action, $route->method, $request, ...$route->params)
 ## Dumping All Routes
 
 You can dump a list of all recognized routes, and their target action classes,
-using the `bin/dump-routes.php` command line tool. Pass the base HTTP action
+using the `bin/autoroute-dump.php` command line tool. Pass the base HTTP action
 namespace, and the directory where the action classes are stored:
 
 ```
-$ php bin/dump-routes.php App\\Http ./src/Http
+$ php bin/autoroute-dump.php App\\Http ./src/Http
 ```
 
 The output will look something like this:
