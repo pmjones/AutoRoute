@@ -577,7 +577,7 @@ class GetPhotosArchive
         int $year = null,
         int $month = null,
         int $day = null
-    ) : Response
+    ) : \ServerResponse
     {
         $payload = $this->domain->fetchAllBySpan($year, $month, $day);
         return $this->responder->response($payload);
