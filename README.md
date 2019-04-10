@@ -123,7 +123,7 @@ Finally, a request for the root URL ...
 
     GET /
 
-... auto-routes to to the the class `App\Http\Get`.
+... auto-routes to the class `App\Http\Get`.
 
 
 ## How It Works
