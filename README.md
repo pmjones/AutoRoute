@@ -284,7 +284,7 @@ $action = Factory::newInstance($route->class);
 
 // call the action instance with the method and params,
 // presumably getting back an HTTP Response
-$response = call_user_func($action, $route->method, ...$route->params);
+$response = call_user_func([$action, $route->method], ...$route->params);
 ```
 
 ## Generating Route Paths
