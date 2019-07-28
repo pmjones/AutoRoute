@@ -1,7 +1,18 @@
 <?php
 use AutoRoute\AutoRoute;
 
-$autoload = require dirname(__DIR__) . '/vendor/autoload.php';
+$autoload = '';
+
+$autoloadFiles = [
+    dirname(__DIR__) . '/vendor/autoload.php',
+    dirname(dirname(dirname(__DIR__))) . '/autoload.php'
+];
+foreach ($autoloadFiles as $autoloadFile) {
+    if (file_exists($autoloadFile)) {
+        $autoload = require $autoloadFile;
+        break;
+    }
+}
 
 $options = getopt('', ['base-url:', 'ignore-params:', 'method:', 'suffix:', 'word-separator:'], $optind);
 
