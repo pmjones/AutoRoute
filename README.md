@@ -137,7 +137,7 @@ further:
 
 2. Followed by the concatenated names of preceding subnamespaces;
 
-4. Ending in `.php`.
+3. Ending in `.php`.
 
 Thus, given a base namespace of `App\Http`, the class `App\Http\Photo\PostPhoto`
 will be the action for `POST /photo[/*]`.
