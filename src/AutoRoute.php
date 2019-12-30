@@ -77,6 +77,18 @@ class AutoRoute
         return new Dumper($this->newActions());
     }
 
+    public function newCreator(string $template)
+    {
+        return new Creator(
+            $this->namespace,
+            $this->directory,
+            $this->suffix,
+            $this->method,
+            $this->wordSeparator,
+            $template
+        );
+    }
+
     protected function newActions()
     {
         return new Actions(
