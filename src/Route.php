@@ -13,7 +13,7 @@ namespace AutoRoute;
 /**
  * @property-read string $class
  * @property-read string $method
- * @property-read array $args
+ * @property-read array $params
  */
 class Route
 {
