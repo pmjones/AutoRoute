@@ -126,6 +126,12 @@ Finally, a request for the root URL ...
 
 ... auto-routes to the class `App\Http\Get`.
 
+> **Tip:**
+>
+> Any HEAD request will auto-route to an explicit `App\Http\...\Head*` class,
+> if one exists. If an explicit `Head` class does not exist, the request will
+> implicitly be auto-routed to the matching `App\Http\...\Get*` class, if one
+> exists.
 
 ## How It Works
 
@@ -146,6 +152,10 @@ will be the action for `POST /photo[/*]`.
 Likewise, `App\Http\Photos\GetPhotos` will be the action class for `GET /photos[/*]`.
 
 And `App\Http\Photo\Edit\GetPhotoEdit` will be the action class for `GET /photo[/*]/edit`.
+
+An explicit `App\Http\Photos\HeadPhotos` will be the action class for
+`HEAD /photos[/*]`. If the `HeadPhotos` class does not exist, the action class
+is inferred to be `App\Http\Photos\HeadPhotos` instead.
 
 Finally, at the URL root path, `App\Http\Get` will be the action class for `GET /`.
 
