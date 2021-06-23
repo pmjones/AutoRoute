@@ -11,6 +11,8 @@ declare(strict_types=1);
 namespace AutoRoute;
 
 use ReflectionClass;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 
 class Dumper
 {
@@ -31,10 +33,22 @@ class Dumper
 
     protected function getFiles() : array
     {
-        $dirlen = strlen($this->actions->getDirectory());
-        $dir = escapeshellarg($this->actions->getDirectory());
-        $command = "find $dir -name '*.php'";
-        exec($command, $files, $exit);
+        $files = [];
+
+        $items = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator(
+                $this->actions->getDirectory()
+            )
+        );
+
+        foreach ($items as $item) {
+            $file = $item->getPathname();
+
+            if (substr($file, -4) == '.php') {
+                $files[] = $file;
+            }
+        }
+
         return $files;
     }
 
