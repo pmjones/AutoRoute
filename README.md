@@ -387,9 +387,13 @@ _AutoRoute_ will see that parameter and incorrectly interpret it as a dynamic
 segment; for example:
 
 ```php
+namespace App\Http\Photo;
+
+use SapiRequest;
+
 class PatchPhoto
 {
-    public function __invoke(\ServerRequest $request, int $id)
+    public function __invoke(SapiRequest $request, int $id)
     {
         // ...
     }
@@ -629,13 +633,15 @@ For example, in the action:
 ```php
 namespace App\Http\Photos\Archive;
 
+use SapiResponse;
+
 class GetPhotosArchive
 {
     public function __invoke(
         int $year = null,
         int $month = null,
         int $day = null
-    ) : \ServerResponse
+    ) : SapiResponse
     {
         $payload = $this->domain->fetchAllBySpan($year, $month, $day);
         return $this->responder->response($payload);
@@ -693,10 +699,12 @@ For example, in the action:
 ```php
 namespace App\Http\Foos;
 
+use SapiRequest;
+
 class GetFoos
 {
     public function __construct(
-        \ServerRequest $request,
+        SapiRequest $request,
         FooService $fooService
     ) {
         $this->request = $request;
