@@ -177,15 +177,15 @@ class Actions
             $base .= $append . '\\';
         }
 
-        $tail = str_replace('\\', '', $subNamespace . $append) . $this->suffix;
-        $class = $base . $verb . $tail;
+        $ending = str_replace('\\', '', $subNamespace . $append) . $this->suffix;
+        $class = $base . $verb . $ending;
 
         if (class_exists($class)) {
             return $class;
         }
 
         if ($verb === 'Head') {
-            $class = $base . 'Get' . $tail;
+            $class = $base . 'Get' . $ending;
             if (class_exists($class)) {
                 return $class;
             }
