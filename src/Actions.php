@@ -169,17 +169,26 @@ class Actions
         string $append = ''
     ) : ?string
     {
-        $class = rtrim($this->namespace, '\\')
+        $base = rtrim($this->namespace, '\\')
             . $subNamespace
             . '\\';
 
         if ($append !== '') {
-            $class .= $append . '\\';
+            $base .= $append . '\\';
         }
 
-        $class .= $verb . str_replace('\\', '', $subNamespace . $append) . $this->suffix;
+        $tail = str_replace('\\', '', $subNamespace . $append) . $this->suffix;
+        $class = $base . $verb . $tail;
+
         if (class_exists($class)) {
             return $class;
+        }
+
+        if ($verb === 'Head') {
+            $class = $base . 'Get' . $tail;
+            if (class_exists($class)) {
+                return $class;
+            }
         }
 
         return null;

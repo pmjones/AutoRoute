@@ -4,9 +4,11 @@ declare(strict_types=1);
 namespace AutoRoute;
 
 use AutoRoute\Http\FooItem\Add\GetFooItemAdd;
+use AutoRoute\Http\FooItem\Add\HeadFooItemAdd;
 use AutoRoute\Http\FooItem\Edit\GetFooItemEdit;
 use AutoRoute\Http\FooItem\Extras\GetFooItemExtras;
 use AutoRoute\Http\FooItem\GetFooItem;
+use AutoRoute\Http\FooItem\HeadFooItem;
 use AutoRoute\Http\FooItem\Variadic\GetFooItemVariadic;
 use AutoRoute\Http\FooItems\Archive\GetFooItemsArchive;
 use AutoRoute\Http\FooItems\GetFooItems;
@@ -57,8 +59,20 @@ class RouterTest extends \PHPUnit\Framework\TestCase
         $this->assertSame(GetFooItemAdd::CLASS, $route->class);
         $this->assertSame([], $route->params);
 
+        $route = $this->router->route('HEAD', '/api/foo-item/add');
+        $this->assertSame(HeadFooItemAdd::CLASS, $route->class);
+        $this->assertSame([], $route->params);
+
+        $route = $this->router->route('HEAD', '/api/foo-item/add');
+        $this->assertSame(HeadFooItemAdd::CLASS, $route->class);
+        $this->assertSame([], $route->params);
+
         $route = $this->router->route('GET', '/api/foo-item/1');
         $this->assertSame(GetFooItem::CLASS, $route->class);
+        $this->assertSame([1], $route->params);
+
+        $route = $this->router->route('HEAD', '/api/foo-item/1');
+        $this->assertSame(HeadFooItem::CLASS, $route->class);
         $this->assertSame([1], $route->params);
 
         $route = $this->router->route('GET', '/api/foo-item/1/edit');
@@ -183,6 +197,10 @@ class RouterTest extends \PHPUnit\Framework\TestCase
     public function testVariadicParam()
     {
         $route = $this->router->route('GET', '/api/foo-item/1/variadic/bar/baz/dib');
+        $this->assertSame(GetFooItemVariadic::CLASS, $route->class);
+        $this->assertSame([1, 'bar', 'baz', 'dib'], $route->params);
+
+        $route = $this->router->route('HEAD', '/api/foo-item/1/variadic/bar/baz/dib');
         $this->assertSame(GetFooItemVariadic::CLASS, $route->class);
         $this->assertSame([1, 'bar', 'baz', 'dib'], $route->params);
     }
