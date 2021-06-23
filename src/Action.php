@@ -12,6 +12,7 @@ namespace AutoRoute;
 
 use ReflectionClass;
 use ReflectionParameter;
+use ReflectionNamedType;
 
 class Action
 {
@@ -250,17 +251,25 @@ class Action
 
     protected function dumpNamedToken(ReflectionParameter $rp) : string
     {
-        $token = '{';
-        $type = (string) $rp->getType();
-        if ($type !== '') {
-            $token .= "$type:";
-        } else {
-            $token .= "string:";
-        }
+        $type = $this->getParameterType($rp);
+        $token = '{' . $type . ':';
+
         if ($rp->isVariadic()) {
             $token .= '...';
         }
+
         $token .= $rp->getName() . '}';
         return $token;
+    }
+
+    protected function getParameterType(ReflectionParameter $rp) : string
+    {
+        $type = $rp->getType();
+
+        if ($type instanceof ReflectionNamedType) {
+            return $type->getName();
+        }
+
+        return 'string';
     }
 }
