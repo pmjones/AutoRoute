@@ -99,7 +99,7 @@ class GetPhoto
 ... recognizing that `1` should be the value of `$photoId`.
 
 AutoRoute supports static "tail" parameters on the URL. If the URL ends in a
-path segment that matches the underscore-separated tail portion of a class name,
+path segment that matches the tail portion of a class name,
 and the action class method has the same number and type of parameters as its
 parent or grandparent class, it will route to that class name. For example,
 given an action class with method parameters such as this ...
