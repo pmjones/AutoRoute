@@ -40,7 +40,15 @@ class RouterTest extends \PHPUnit\Framework\TestCase
         $this->assertSame(GetRepo::CLASS, $route->class);
         $this->assertSame(['pmjones', 'auto-route'], $route->params);
 
+        $route = $this->router->route('HEAD', '/api/repo/pmjones/auto-route');
+        $this->assertSame(GetRepo::CLASS, $route->class);
+        $this->assertSame(['pmjones', 'auto-route'], $route->params);
+
         $route = $this->router->route('GET', '/api/repo/pmjones/auto-route/issue/11');
+        $this->assertSame(GetRepoIssue::CLASS, $route->class);
+        $this->assertSame(['pmjones', 'auto-route', 11], $route->params);
+
+        $route = $this->router->route('HEAD', '/api/repo/pmjones/auto-route/issue/11');
         $this->assertSame(GetRepoIssue::CLASS, $route->class);
         $this->assertSame(['pmjones', 'auto-route', 11], $route->params);
 
@@ -48,7 +56,15 @@ class RouterTest extends \PHPUnit\Framework\TestCase
         $this->assertSame(GetRepoIssueComment::CLASS, $route->class);
         $this->assertSame(['pmjones', 'auto-route', 11, 22], $route->params);
 
+        $route = $this->router->route('HEAD', '/api/repo/pmjones/auto-route/issue/11/comment/22');
+        $this->assertSame(GetRepoIssueComment::CLASS, $route->class);
+        $this->assertSame(['pmjones', 'auto-route', 11, 22], $route->params);
+
         $route = $this->router->route('GET', '/api/repo/pmjones/auto-route/issue/11/comment/add');
+        $this->assertSame(GetRepoIssueCommentAdd::CLASS, $route->class);
+        $this->assertSame(['pmjones', 'auto-route', 11], $route->params);
+
+        $route = $this->router->route('HEAD', '/api/repo/pmjones/auto-route/issue/11/comment/add');
         $this->assertSame(GetRepoIssueCommentAdd::CLASS, $route->class);
         $this->assertSame(['pmjones', 'auto-route', 11], $route->params);
     }
