@@ -184,14 +184,12 @@ class Actions
             return $class;
         }
 
-        if ($verb === 'Head') {
-            $class = $base . 'Get' . $ending;
-            if (class_exists($class)) {
-                return $class;
-            }
+        if ($verb !== 'Head') {
+            return null;
         }
 
-        return null;
+        $getClass = $base . 'Get' . $ending;
+        return class_exists($getClass) ? $getClass : null;
     }
 
     public function fileToClass(string $file) : ?string
