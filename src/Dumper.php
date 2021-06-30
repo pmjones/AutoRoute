@@ -70,10 +70,16 @@ class Dumper
     protected function getUrlsFromClasses(array $classes) : array
     {
         $urls = [];
+
         foreach ($classes as $class) {
             list ($verb, $path, $argc) = $this->actions->dump($class);
             $urls[$path][$verb] = $class;
+
+            if ($verb === 'Get' && ! isset($urls[$path]['Head'])) {
+                $urls[$path]['Head'] = $class;
+            }
         }
+
         ksort($urls);
         return $urls;
     }

@@ -128,10 +128,12 @@ class IgnoreTest extends \PHPUnit\Framework\TestCase
           '/' =>
           array (
             'Get' => 'AutoRoute\\HttpIgnore\\Get',
+            'Head' => 'AutoRoute\\HttpIgnore\\Get',
           ),
           '/admin/dashboard' =>
           array (
             'Get' => 'AutoRoute\\HttpIgnore\\Admin\\Dashboard\\GetAdminDashboard',
+            'Head' => 'AutoRoute\\HttpIgnore\\Admin\\Dashboard\\GetAdminDashboard',
           ),
           '/foo_item' =>
           array (
@@ -140,48 +142,59 @@ class IgnoreTest extends \PHPUnit\Framework\TestCase
           '/foo_item/add' =>
           array (
             'Get' => 'AutoRoute\\HttpIgnore\\FooItem\\Add\\GetFooItemAdd',
+            'Head' => 'AutoRoute\\HttpIgnore\\FooItem\\Add\\GetFooItemAdd',
           ),
           '/foo_item/{int:id}' =>
           array (
             'Delete' => 'AutoRoute\\HttpIgnore\\FooItem\\DeleteFooItem',
             'Get' => 'AutoRoute\\HttpIgnore\\FooItem\\GetFooItem',
+            'Head' => 'AutoRoute\\HttpIgnore\\FooItem\\GetFooItem',
             'Patch' => 'AutoRoute\\HttpIgnore\\FooItem\\PatchFooItem',
           ),
           '/foo_item/{int:id}/edit' =>
           array (
             'Get' => 'AutoRoute\\HttpIgnore\\FooItem\\Edit\\GetFooItemEdit',
+            'Head' => 'AutoRoute\\HttpIgnore\\FooItem\\Edit\\GetFooItemEdit',
           ),
           '/foo_item/{int:id}/extras/{float:foo}/{string:bar}/{string:baz}/{bool:dib}[/{array:gir}]' =>
           array (
             'Get' => 'AutoRoute\\HttpIgnore\\FooItem\\Extras\\GetFooItemExtras',
+            'Head' => 'AutoRoute\\HttpIgnore\\FooItem\\Extras\\GetFooItemExtras',
           ),
           '/foo_item/{int:id}/variadic[/{string:...more}]' =>
           array (
             'Get' => 'AutoRoute\\HttpIgnore\\FooItem\\Variadic\\GetFooItemVariadic',
+            'Head' => 'AutoRoute\\HttpIgnore\\FooItem\\Variadic\\GetFooItemVariadic',
           ),
           '/foo_items/archive[/{int:year}][/{int:month}][/{int:day}]' =>
           array (
             'Get' => 'AutoRoute\\HttpIgnore\\FooItems\\Archive\\GetFooItemsArchive',
+            'Head' => 'AutoRoute\\HttpIgnore\\FooItems\\Archive\\GetFooItemsArchive',
           ),
           '/foo_items[/{int:page}]' =>
           array (
             'Get' => 'AutoRoute\\HttpIgnore\\FooItems\\GetFooItems',
+            'Head' => 'AutoRoute\\HttpIgnore\\FooItems\\GetFooItems',
           ),
           '/repo/{string:ownerName}/{string:repoName}' =>
           array (
             'Get' => 'AutoRoute\\HttpIgnore\\Repo\\GetRepo',
+            'Head' => 'AutoRoute\\HttpIgnore\\Repo\\GetRepo',
           ),
           '/repo/{string:ownerName}/{string:repoName}/issue/{int:issueNum}' =>
           array (
             'Get' => 'AutoRoute\\HttpIgnore\\Repo\\Issue\\GetRepoIssue',
+            'Head' => 'AutoRoute\\HttpIgnore\\Repo\\Issue\\GetRepoIssue',
           ),
           '/repo/{string:ownerName}/{string:repoName}/issue/{int:issueNum}/comment/add' =>
           array (
             'Get' => 'AutoRoute\\HttpIgnore\\Repo\\Issue\\Comment\\Add\\GetRepoIssueCommentAdd',
+            'Head' => 'AutoRoute\\HttpIgnore\\Repo\\Issue\\Comment\\Add\\GetRepoIssueCommentAdd',
           ),
           '/repo/{string:ownerName}/{string:repoName}/issue/{int:issueNum}/comment/{int:commentNum}' =>
           array (
             'Get' => 'AutoRoute\\HttpIgnore\\Repo\\Issue\\Comment\\GetRepoIssueComment',
+            'Head' => 'AutoRoute\\HttpIgnore\\Repo\\Issue\\Comment\\GetRepoIssueComment',
           ),
         );
 

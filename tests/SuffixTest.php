@@ -126,10 +126,12 @@ class SuffixTest extends \PHPUnit\Framework\TestCase
           '/' =>
           array (
             'Get' => 'AutoRoute\\HttpSuffix\\GetAction',
+            'Head' => 'AutoRoute\\HttpSuffix\\GetAction',
           ),
           '/admin/dashboard' =>
           array (
             'Get' => 'AutoRoute\\HttpSuffix\\Admin\\Dashboard\\GetAdminDashboardAction',
+            'Head' => 'AutoRoute\\HttpSuffix\\Admin\\Dashboard\\GetAdminDashboardAction',
           ),
           '/foo-item' =>
           array (
@@ -138,48 +140,59 @@ class SuffixTest extends \PHPUnit\Framework\TestCase
           '/foo-item/add' =>
           array (
             'Get' => 'AutoRoute\\HttpSuffix\\FooItem\\Add\\GetFooItemAddAction',
+            'Head' => 'AutoRoute\\HttpSuffix\\FooItem\\Add\\GetFooItemAddAction',
           ),
           '/foo-item/{int:id}' =>
           array (
             'Delete' => 'AutoRoute\\HttpSuffix\\FooItem\\DeleteFooItemAction',
             'Get' => 'AutoRoute\\HttpSuffix\\FooItem\\GetFooItemAction',
+            'Head' => 'AutoRoute\\HttpSuffix\\FooItem\\GetFooItemAction',
             'Patch' => 'AutoRoute\\HttpSuffix\\FooItem\\PatchFooItemAction',
           ),
           '/foo-item/{int:id}/edit' =>
           array (
             'Get' => 'AutoRoute\\HttpSuffix\\FooItem\\Edit\\GetFooItemEditAction',
+            'Head' => 'AutoRoute\\HttpSuffix\\FooItem\\Edit\\GetFooItemEditAction',
           ),
           '/foo-item/{int:id}/extras/{float:foo}/{string:bar}/{string:baz}/{bool:dib}[/{array:gir}]' =>
           array (
             'Get' => 'AutoRoute\\HttpSuffix\\FooItem\\Extras\\GetFooItemExtrasAction',
+            'Head' => 'AutoRoute\\HttpSuffix\\FooItem\\Extras\\GetFooItemExtrasAction',
           ),
           '/foo-item/{int:id}/variadic[/{string:...more}]' =>
           array (
             'Get' => 'AutoRoute\\HttpSuffix\\FooItem\\Variadic\\GetFooItemVariadicAction',
+            'Head' => 'AutoRoute\\HttpSuffix\\FooItem\\Variadic\\GetFooItemVariadicAction',
           ),
           '/foo-items/archive[/{int:year}][/{int:month}][/{int:day}]' =>
           array (
             'Get' => 'AutoRoute\\HttpSuffix\\FooItems\\Archive\\GetFooItemsArchiveAction',
+            'Head' => 'AutoRoute\\HttpSuffix\\FooItems\\Archive\\GetFooItemsArchiveAction',
           ),
           '/foo-items[/{int:page}]' =>
           array (
             'Get' => 'AutoRoute\\HttpSuffix\\FooItems\\GetFooItemsAction',
+            'Head' => 'AutoRoute\\HttpSuffix\\FooItems\\GetFooItemsAction',
           ),
           '/repo/{string:ownerName}/{string:repoName}' =>
           array (
             'Get' => 'AutoRoute\\HttpSuffix\\Repo\\GetRepoAction',
+            'Head' => 'AutoRoute\\HttpSuffix\\Repo\\GetRepoAction',
           ),
           '/repo/{string:ownerName}/{string:repoName}/issue/{int:issueNum}' =>
           array (
             'Get' => 'AutoRoute\\HttpSuffix\\Repo\\Issue\\GetRepoIssueAction',
+            'Head' => 'AutoRoute\\HttpSuffix\\Repo\\Issue\\GetRepoIssueAction',
           ),
           '/repo/{string:ownerName}/{string:repoName}/issue/{int:issueNum}/comment/add' =>
           array (
             'Get' => 'AutoRoute\\HttpSuffix\\Repo\\Issue\\Comment\\Add\\GetRepoIssueCommentAddAction',
+            'Head' => 'AutoRoute\\HttpSuffix\\Repo\\Issue\\Comment\\Add\\GetRepoIssueCommentAddAction',
           ),
           '/repo/{string:ownerName}/{string:repoName}/issue/{int:issueNum}/comment/{int:commentNum}' =>
           array (
             'Get' => 'AutoRoute\\HttpSuffix\\Repo\\Issue\\Comment\\GetRepoIssueCommentAction',
+            'Head' => 'AutoRoute\\HttpSuffix\\Repo\\Issue\\Comment\\GetRepoIssueCommentAction',
           ),
         );
 

@@ -169,20 +169,27 @@ class Actions
         string $append = ''
     ) : ?string
     {
-        $class = rtrim($this->namespace, '\\')
+        $base = rtrim($this->namespace, '\\')
             . $subNamespace
             . '\\';
 
         if ($append !== '') {
-            $class .= $append . '\\';
+            $base .= $append . '\\';
         }
 
-        $class .= $verb . str_replace('\\', '', $subNamespace . $append) . $this->suffix;
+        $ending = str_replace('\\', '', $subNamespace . $append) . $this->suffix;
+        $class = $base . $verb . $ending;
+
         if (class_exists($class)) {
             return $class;
         }
 
-        return null;
+        if ($verb !== 'Head') {
+            return null;
+        }
+
+        $getClass = $base . 'Get' . $ending;
+        return class_exists($getClass) ? $getClass : null;
     }
 
     public function fileToClass(string $file) : ?string
