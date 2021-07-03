@@ -164,21 +164,20 @@ class Router
     {
         $input = $this->dynamic;
         $output = [];
-        $filter = new Filter();
 
         while (! empty($input)) {
             $rp = array_shift($parameters);
 
             // non-variadic values
             if (! $rp->isVariadic()) {
-                $output[] = $filter->forAction($rp, array_shift($input));
+                $output[] = $this->filter->forAction($rp, array_shift($input));
                 continue;
             }
 
             // all remaining values as variadic
             while (! empty($input)) {
                 $value = array_shift($input);
-                $output[] = $filter->forAction($rp, $value);
+                $output[] = $this->filter->forAction($rp, $value);
             }
         }
 
