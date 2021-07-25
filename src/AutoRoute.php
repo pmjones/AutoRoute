@@ -10,95 +10,146 @@ declare(strict_types=1);
 
 namespace AutoRoute;
 
+use Psr\Log\LoggerInterface;
+
 class AutoRoute
 {
-    protected $namespace;
+    protected ?Actions $actions = null;
 
-    protected $directory;
+    protected ?Config $config = null;
 
-    protected $baseUrl = '/';
+    protected ?Creator $creator = null;
 
-    protected $ignoreParams = 0;
+    protected ?Dumper $dumper = null;
 
-    protected $method = '__invoke';
+    protected ?Filter $filter = null;
 
-    protected $suffix = '';
+    protected ?Generator $generator = null;
 
-    protected $wordSeparator = '-';
+    protected ?Logger $logger = null;
 
-    public function __construct(string $namespace, string $directory)
-    {
-        $this->namespace = $namespace;
-        $this->directory = $directory;
+    protected ?Reflector $reflector = null;
+
+    protected ?Router $router = null;
+
+    public function __construct(
+        protected string $namespace,
+        protected string $directory,
+        protected string $baseUrl = '/',
+        protected int $ignoreParams = 0,
+        protected string $method = '__invoke',
+        protected string $suffix = '',
+        protected string $wordSeparator = '-',
+        protected mixed /* callable */ $loggerFactory = null,
+    ) {
+        if ($this->loggerFactory === null) {
+            $this->loggerFactory = function () : LoggerInterface {
+                return new Logger();
+            };
+        }
     }
 
-    public function setBaseUrl(string $baseUrl) : self
+    public function getActions() : Actions
     {
-        $this->baseUrl = $baseUrl;
-        return $this;
+        if ($this->actions === null) {
+            $this->actions = new Actions(
+                $this->getConfig(),
+                $this->getReflector(),
+            );
+        }
+
+        return $this->actions;
     }
 
-    public function setIgnoreParams(int $ignoreParams) : self
+    public function getConfig() : Config
     {
-        $this->ignoreParams = $ignoreParams;
-        return $this;
+        if ($this->config === null) {
+            $this->config = new Config(
+                $this->namespace,
+                $this->directory,
+                $this->baseUrl,
+                $this->ignoreParams,
+                $this->method,
+                $this->suffix,
+                $this->wordSeparator,
+            );
+        }
+
+        return $this->config;
     }
 
-    public function setMethod(string $method) : self
+    public function getCreator() : Creator
     {
-        $this->method = $method;
-        return $this;
+        if ($this->creator === null) {
+            $this->creator = new Creator($this->getConfig());
+        }
+
+        return $this->creator;
     }
 
-    public function setSuffix(string $suffix) : self
+    public function getDumper() : Dumper
     {
-        $this->suffix = $suffix;
-        return $this;
+        if ($this->dumper === null) {
+            $this->dumper = new Dumper(
+                $this->getConfig(),
+                $this->getReflector(),
+                $this->getActions(),
+            );
+        }
+
+        return $this->dumper;
     }
 
-    public function setWordSeparator(string $wordSeparator) : self
+    public function getFilter() : Filter
     {
-        $this->wordSeparator = $wordSeparator;
-        return $this;
+        if ($this->filter === null) {
+            $this->filter = new Filter($this->getReflector());
+        }
+
+        return $this->filter;
     }
 
-    public function newRouter()
+    public function getGenerator() : Generator
     {
-        return new Router($this->newActions());
+        if ($this->generator === null) {
+            $this->generator = new Generator(
+                $this->getActions(),
+                $this->getFilter()
+            );
+        }
+
+        return $this->generator;
     }
 
-    public function newGenerator()
+    public function getLogger() : LoggerInterface
     {
-        return new Generator($this->newActions());
+        if ($this->logger === null) {
+            $this->logger = ($this->loggerFactory)();
+        }
+
+        return $this->logger;
     }
 
-    public function newDumper()
+    public function getReflector() : Reflector
     {
-        return new Dumper($this->newActions());
+        if ($this->reflector === null) {
+            $this->reflector = new Reflector($this->method);
+        }
+
+        return $this->reflector;
     }
 
-    public function newCreator(string $template)
+    public function getRouter() : Router
     {
-        return new Creator(
-            $this->namespace,
-            $this->directory,
-            $this->suffix,
-            $this->method,
-            $this->wordSeparator,
-            $template
-        );
-    }
+        if ($this->router === null) {
+            $this->router = new Router(
+                $this->getConfig(),
+                $this->getActions(),
+                $this->getFilter(),
+                $this->getLogger(),
+            );
+        }
 
-    protected function newActions()
-    {
-        return new Actions(
-            $this->namespace,
-            $this->directory,
-            $this->suffix,
-            $this->method,
-            $this->ignoreParams,
-            $this->baseUrl,
-            $this->wordSeparator
-        );
+        return $this->router;
     }
 }

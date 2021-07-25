@@ -28,30 +28,29 @@ class SuffixTest extends \PHPUnit\Framework\TestCase
     protected function setUp() : void
     {
         $autoRoute = new AutoRoute(
-            'AutoRoute\\HttpSuffix',
-            __DIR__ . '/HttpSuffix'
+            namespace: 'AutoRoute\\HttpSuffix',
+            directory: __DIR__ . '/HttpSuffix',
+            suffix: 'Action',
         );
 
-        $autoRoute->setSuffix('Action');
-
-        $this->router = $autoRoute->newRouter();
-        $this->generator = $autoRoute->newGenerator();
-        $this->dumper = $autoRoute->newDumper();
+        $this->router = $autoRoute->getRouter();
+        $this->generator = $autoRoute->getGenerator();
+        $this->dumper = $autoRoute->getDumper();
     }
 
     public function testRouter()
     {
         $route = $this->router->route('GET', '/foo-item/add');
         $this->assertSame(GetFooItemAddAction::CLASS, $route->class);
-        $this->assertSame([], $route->params);
+        $this->assertSame([], $route->arguments);
 
         $route = $this->router->route('GET', '/foo-item/1');
         $this->assertSame(GetFooItemAction::CLASS, $route->class);
-        $this->assertSame([1], $route->params);
+        $this->assertSame([1], $route->arguments);
 
         $route = $this->router->route('GET', '/foo-item/1/edit');
         $this->assertSame(GetFooItemEditAction::CLASS, $route->class);
-        $this->assertSame([1], $route->params);
+        $this->assertSame([1], $route->arguments);
     }
 
     public function testGenerator()
@@ -154,12 +153,12 @@ class SuffixTest extends \PHPUnit\Framework\TestCase
             'Get' => 'AutoRoute\\HttpSuffix\\FooItem\\Edit\\GetFooItemEditAction',
             'Head' => 'AutoRoute\\HttpSuffix\\FooItem\\Edit\\GetFooItemEditAction',
           ),
-          '/foo-item/{int:id}/extras/{float:foo}/{string:bar}/{string:baz}/{bool:dib}[/{array:gir}]' =>
+          '/foo-item/{int:id}/extras/{float:foo}/{string:bar}/{mixed:baz}/{bool:dib}[/{array:gir}]' =>
           array (
             'Get' => 'AutoRoute\\HttpSuffix\\FooItem\\Extras\\GetFooItemExtrasAction',
             'Head' => 'AutoRoute\\HttpSuffix\\FooItem\\Extras\\GetFooItemExtrasAction',
           ),
-          '/foo-item/{int:id}/variadic[/{string:...more}]' =>
+          '/foo-item/{int:id}/variadic[/{...string:more}]' =>
           array (
             'Get' => 'AutoRoute\\HttpSuffix\\FooItem\\Variadic\\GetFooItemVariadicAction',
             'Head' => 'AutoRoute\\HttpSuffix\\FooItem\\Variadic\\GetFooItemVariadicAction',
@@ -196,7 +195,7 @@ class SuffixTest extends \PHPUnit\Framework\TestCase
           ),
         );
 
-        $actual = $this->dumper->dumpRoutes();
+        $actual = $this->dumper->dump();
         $this->assertSame($expect, $actual);
     }
 }

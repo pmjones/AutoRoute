@@ -31,20 +31,23 @@ if ($directory === false) {
 $namespace = rtrim($namespace, '\\') . '\\';
 $autoload->addPsr4($namespace, $directory);
 
-$autoRoute = (new AutoRoute($namespace, $directory))
-    ->setBaseUrl($options['base-url'] ?? '/')
-    ->setIgnoreParams((int) $options['ignore-params'] ?? 0)
-    ->setMethod($options['method'] ?? '__invoke')
-    ->setSuffix($options['suffix'] ?? '')
-    ->setWordSeparator($options['word-separator'] ?? '-');
+$autoRoute = new AutoRoute(
+    namespace: $namespace,
+    directory: $directory,
+    baseUrl: $options['base-url'] ?? '/',
+    ignoreParams: (int) ($options['ignore-params'] ?? 0),
+    method: $options['method'] ?? '__invoke',
+    suffix: $options['suffix'] ?? '',
+    wordSeparator: $options['word-separator'] ?? '-',
+);
 
 // ---
 
-$dumper = $autoRoute->newDumper();
+$dumper = $autoRoute->getDumper();
 
 try {
-    $urls = $dumper->dumpRoutes();
-} catch (Exception $e) {
+    $urls = $dumper->dump();
+} catch (Throwable $e) {
     echo $e->getMessage() . PHP_EOL;
     exit(1);
 }

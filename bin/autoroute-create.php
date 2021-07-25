@@ -37,14 +37,21 @@ if (! file_exists($template)) {
 
 // ---
 
-$autoRoute = (new AutoRoute($namespace, $directory))
-    ->setMethod($options['method'] ?? '__invoke')
-    ->setSuffix($options['suffix'] ?? '')
-    ->setWordSeparator($options['word-separator'] ?? '-');
+$autoRoute = new AutoRoute(
+    namespace: $namespace,
+    directory: $directory,
+    method: $options['method'] ?? '__invoke',
+    suffix: $options['suffix'] ?? '',
+    wordSeparator: $options['word-separator'] ?? '-',
+);
 
-$creator = $autoRoute->newCreator(file_get_contents($template));
+$creator = $autoRoute->getCreator();
 
-[$file, $code] = $creator->create($verb, $path);
+[$file, $code] = $creator->create(
+    $verb,
+    $path,
+    file_get_contents($template)
+);
 
 echo $file . PHP_EOL;
 if (file_exists($file)) {

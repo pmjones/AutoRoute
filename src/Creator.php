@@ -12,49 +12,26 @@ namespace AutoRoute;
 
 class Creator
 {
-    protected $namespace;
-
-    protected $directory;
-
-    protected $suffix;
-
-    protected $method;
-
-    protected $wordSeparator;
-
-    protected $template;
-
     public function __construct(
-        string $namespace,
-        string $directory,
-        string $suffix,
-        string $method,
-        string $wordSeparator,
-        string $template
+        protected Config $config,
     ) {
-        $this->namespace = trim($namespace, '\\') . '\\';
-        $this->directory = rtrim($directory, DIRECTORY_SEPARATOR);
-        $this->suffix = $suffix;
-        $this->method = $method;
-        $this->wordSeparator = $wordSeparator;
-        $this->template = $template;
     }
 
-    public function create(string $verb, string $path) : array
+    public function create(string $verb, string $path, string $template) : array
     {
-        [$namespace, $directory, $class, $parameters] = $this->parse($verb, $path);
-        $file = "{$directory}/{$class}.php";
+        $parsed = $this->parse($verb, $path);
+        $file = "{$parsed['directory']}/{$parsed['class']}.php";
         $vars = [
-            '{NAMESPACE}' => $namespace,
-            '{CLASS}' => $class,
-            '{METHOD}' => $this->method,
-            '{PARAMETERS}' => $parameters,
+            '{NAMESPACE}' => $parsed['namespace'],
+            '{CLASS}' => $parsed['class'],
+            '{METHOD}' => $parsed['method'],
+            '{PARAMETERS}' => $parsed['parameters'],
         ];
-        $code = strtr($this->template, $vars);
+        $code = strtr($template, $vars);
         return [$file, $code];
     }
 
-    protected function parse(string $verb, string $path) : array
+    public function parse(string $verb, string $path) : array
     {
         $segments = explode('/', trim($path, '/'));
         $subNamespaces = [];
@@ -68,7 +45,7 @@ class Creator
                 continue;
             }
 
-            $segment = str_replace($this->wordSeparator, ' ', $segment);
+            $segment = str_replace($this->config->wordSeparator, ' ', $segment);
             $segment = str_replace(' ', '', ucwords($segment));
             $subNamespaces[] = $segment;
         }
@@ -83,16 +60,17 @@ class Creator
 
         $class = ucfirst(strtolower($verb))
             . str_replace('\\', '', $namespace)
-            . $this->suffix;
+            . $this->config->suffix;
 
-        $directory = $this->directory . DIRECTORY_SEPARATOR
+        $directory = $this->config->directory . DIRECTORY_SEPARATOR
             . str_replace('\\', DIRECTORY_SEPARATOR, $namespace);
 
         return [
-            rtrim($this->namespace . $namespace, '\\'),
-            $directory,
-            $class,
-            implode(', ', $parameters)
+            'namespace' => rtrim($this->config->namespace . $namespace, '\\'),
+            'directory' => $directory,
+            'class' => $class,
+            'method' => $this->config->method,
+            'parameters' => implode(', ', $parameters)
         ];
     }
 }

@@ -8,8 +8,8 @@
  */
 declare(strict_types=1);
 
-namespace AutoRoute;
+namespace AutoRoute\Exception;
 
-class Exception extends \Exception
+class NotFound extends Exception
 {
 }

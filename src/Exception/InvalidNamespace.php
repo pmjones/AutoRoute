@@ -8,8 +8,8 @@
  */
 declare(strict_types=1);
 
-namespace AutoRoute;
+namespace AutoRoute\Exception;
 
-class NotFound extends Exception
+class InvalidNamespace extends Exception
 {
 }

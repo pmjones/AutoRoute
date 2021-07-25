@@ -8,18 +8,22 @@ class CreatorTest extends \PHPUnit\Framework\TestCase
     public function test()
     {
         $autoRoute = new AutoRoute(
-            'AutoRoute\\Http',
-            __DIR__ . DIRECTORY_SEPARATOR . 'Http'
+            namespace: 'AutoRoute\\Http',
+            directory: __DIR__ . DIRECTORY_SEPARATOR . 'Http',
+            suffix: 'Action',
+            method: 'exec',
         );
-        $autoRoute->setSuffix('Action');
-        $autoRoute->setMethod('exec');
-        $creator = $autoRoute->newCreator(file_get_contents(
+
+        $creator = $autoRoute->getCreator();
+
+        $template = file_get_contents(
             dirname(__DIR__) . '/resources/templates/action.tpl'
-        ));
+        );
 
         [$file, $code] = $creator->create(
             'GET',
-            '/company/{companyId}/employee/{employeeNum}'
+            '/company/{companyId}/employee/{employeeNum}',
+            $template
         );
 
         $expect = str_replace(

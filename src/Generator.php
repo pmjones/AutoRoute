@@ -10,59 +10,81 @@ declare(strict_types=1);
 
 namespace AutoRoute;
 
+use ReflectionParameter;
+
 class Generator
 {
-    protected $actions;
-
-    protected $filter;
-
-    public function __construct(Actions $actions)
-    {
-        $this->actions = $actions;
-        $this->filter = new Filter();
+    public function __construct(
+        protected Actions $actions,
+        protected Filter $filter,
+    ) {
     }
 
-    public function generate(string $class, ...$dynamic) : string
+    public function generate(string $class, mixed ...$values) : string
     {
-        list ($verb, $path, $argc) = $this->actions->generate($class);
-
-        $count = count($dynamic);
-        if ($count < $argc) {
-            $classMethod = $this->actions->getAction($class)->getClassMethod();
-            throw new NotFound("Expected $argc required argument(s) for {$classMethod}, actually {$count}");
-        }
+        $reverse = $this->actions->getReverse($class);
+        $path = $reverse->path;
+        $count = count($values);
 
         $pairs = [];
-        $action = $this->actions->getAction($class);
-        $parameters = $action->getParameters();
-
+        $parameters = $reverse->parameters;
         $i = 0;
-        while (! empty($dynamic) && ! empty($parameters)) {
 
+        while (! empty($parameters)) {
             $rp = array_shift($parameters);
 
             if ($rp->isVariadic()) {
-                while (! empty($dynamic)) {
-                    $path .= '/' . $this->filter->forSegment($rp, array_shift($dynamic));
+                while (! empty($values)) {
+                    $path .= $this->segments($rp, $values);
                 }
+
                 break;
             }
 
-            $segment = $this->filter->forSegment($rp, array_shift($dynamic));
+            $segments = $this->segments($rp, $values);
+
             if ($rp->isOptional()) {
-                $path .= '/' . $segment;
+                $path .= $segments;
             } else {
-                $pairs['{' . $i . '}'] = $segment;
+                $pairs['{' . $i . '}'] = ltrim($segments, '/');
                 $i ++;
             }
         }
 
-        if (! empty($dynamic)) {
-            $classMethod = $action->getClassMethod();
-            throw new NotFound("Too many generator segments for {$classMethod}");
+        if (! empty($values)) {
+            throw new Exception\NotFound("Too many arguments provided for {$class}");
         }
 
         $path = strtr($path, $pairs);
-        return '/' . ltrim($path, '/');
+        return '/' . trim($path, '/');
+    }
+
+    protected function segments(ReflectionParameter $rp, array &$values) : string
+    {
+        if (empty($values) && $rp->isOptional()) {
+            return '';
+        }
+
+        $original = $values;
+
+        // do not capture the filtered value, just validate it
+        $this->filter->parameter($rp, $values);
+
+        // capture the original values
+        $segments = [];
+        $k = count($original) - count($values);
+        for ($i = 0; $i < $k; $i ++) {
+            $value = array_shift($original);
+
+            // only arrays cannot be cast to string
+            if (is_array($value)) {
+                $value = implode(',', $value);
+            }
+
+            // cast to a string for the url path
+            $segments[] = (string) $value;
+        }
+
+        return '/' . implode('/', $segments);
     }
 }

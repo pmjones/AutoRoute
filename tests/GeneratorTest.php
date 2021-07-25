@@ -20,13 +20,12 @@ class GeneratorTest extends \PHPUnit\Framework\TestCase
     protected function setUp() : void
     {
         $autoRoute = new AutoRoute(
-            'AutoRoute\\Http',
-            __DIR__ . DIRECTORY_SEPARATOR . 'Http'
+            namespace: 'AutoRoute\\Http',
+            directory: __DIR__ . DIRECTORY_SEPARATOR . 'Http',
+            baseUrl: '/api/',
         );
 
-        $autoRoute->setBaseUrl('/api/');
-
-        $this->generator = $autoRoute->newGenerator();
+        $this->generator = $autoRoute->getGenerator();
     }
 
     public function testGenerate()
@@ -97,22 +96,22 @@ class GeneratorTest extends \PHPUnit\Framework\TestCase
 
     public function testGenerateInvalidNamespace()
     {
-        $this->expectException(InvalidNamespace::CLASS);
+        $this->expectException(Exception\InvalidNamespace::CLASS);
         $this->expectExceptionMessage('Expected namespace AutoRoute\Http\, actually Mismatched\Namespace\GetFooItemEdit');
         $this->generator->generate('Mismatched\Namespace\GetFooItemEdit');
     }
 
     public function testGenerateNoSuchClass()
     {
-        $this->expectException(NotFound::CLASS);
+        $this->expectException(Exception\NotFound::CLASS);
         $this->expectExceptionMessage('Expected class AutoRoute\Http\NoSuchAction, actually not found');
         $this->generator->generate(\AutoRoute\Http\NoSuchAction::CLASS);
     }
 
     public function testGenerateTooManySegments()
     {
-        $this->expectException(NotFound::CLASS);
-        $this->expectExceptionMessage('Too many generator segments for AutoRoute\Http\FooItem\Extras\GetFooItemExtras::__invoke()');
+        $this->expectException(Exception\NotFound::CLASS);
+        $this->expectExceptionMessage('Too many arguments provided for AutoRoute\Http\FooItem\Extras\GetFooItemExtras');
         $this->generator->generate(
             GetFooItemExtras::CLASS,
             1,
@@ -127,8 +126,8 @@ class GeneratorTest extends \PHPUnit\Framework\TestCase
 
     public function testGenerateNotEnoughSegments()
     {
-        $this->expectException(NotFound::CLASS);
-        $this->expectExceptionMessage('Expected 1 required argument(s) for AutoRoute\Http\FooItem\Edit\GetFooItemEdit::__invoke(), actually 0');
+        $this->expectException(Exception\InvalidArgument::CLASS);
+        $this->expectExceptionMessage('Expected non-blank argument for AutoRoute\Http\FooItem\Edit\GetFooItemEdit::__invoke() parameter 0 ($id), actually NULL');
         $this->generator->generate(GetFooItemEdit::CLASS);
     }
 
@@ -139,7 +138,7 @@ class GeneratorTest extends \PHPUnit\Framework\TestCase
             __DIR__ . DIRECTORY_SEPARATOR . 'Http'
         );
 
-        $generator = $autoRoute->newGenerator();
+        $generator = $autoRoute->getGenerator();
 
         $actual = $generator->generate(GetFooItemEdit::CLASS, 1);
         $expect = '/foo-item/1/edit';

@@ -10,177 +10,292 @@ declare(strict_types=1);
 
 namespace AutoRoute;
 
+use Psr\Log\LoggerInterface;
+use ReflectionParameter;
+
 class Router
 {
-    protected $actions;
+    protected Action $action;
 
-    protected $action;
+    protected array $arguments = [];
 
-    protected $verb;
+    protected string $class = '';
 
-    protected $segments;
+    protected array $segments = [];
 
-    protected $subNamespace;
+    protected string $subNamespace = '';
 
-    protected $class;
+    protected string $verb = '';
 
-    protected $dynamic;
-
-    protected $filter;
-
-    public function __construct(Actions $actions)
-    {
-        $this->actions = $actions;
-        $this->filter = new Filter();
+    public function __construct(
+        protected Config $config,
+        protected Actions $actions,
+        protected Filter $filter,
+        protected LoggerInterface $logger,
+    ) {
     }
 
     public function route(string $verb, string $path) : Route
     {
-        $originalPath = $path;
-
+        $this->log("{$verb} {$path}");
         $this->verb = ucfirst(strtolower($verb));
-        $this->segments = $this->actions->getSegments($path);
+        $this->segments = $this->getSegments($path);
         $this->subNamespace = '';
         $this->class = '';
-        $this->action = null;
-        $this->dynamic = [];
+        $this->action = new NullAction();
+        $this->arguments = [];
 
         do {
-            $this->match();
+            $this->capture();
         } while (! empty($this->segments));
 
-        if (! class_exists($this->class)) {
-            $verb = strtoupper($verb);
-            $ns = rtrim($this->actions->getNamespace(), '\\') . $this->subNamespace;
-            throw new MethodNotAllowed("$verb action not found in namespace $ns");
-        }
-
-        $action = $this->actions->getAction($this->class);
-        $params = $this->filter($action->getParameters());
-        return new Route($action->getClass(), $action->getMethod(), $params);
+        return new Route(
+            $this->action->getClass(),
+            $this->config->method,
+            $this->arguments
+        );
     }
 
-    protected function match() : void
+    protected function capture() : void
     {
-        // consume next segment as a subnamespace
-        $segment = '';
-        if (! empty($this->segments)) {
-            $segment = $this->actions->segmentToNamespace(array_shift($this->segments));
-            $this->subNamespace .= '\\' . $segment;
-        }
+        $this->captureSubNamespace();
+        $this->captureMainClass();
+        $this->captureTailClass();
+        $this->captureRequiredArguments();
 
-        // does the subnamespace exist?
-        if (! $this->actions->isSubNamespace($this->subNamespace)) {
-            // no, so no need to keep matching
-            $ns = rtrim($this->actions->getNamespace(), '\\') . $this->subNamespace;
-            throw new InvalidNamespace("Not a known namespace: $ns");
-        }
-
-        // does the class exist?
-        $class = $this->actions->actionExists($this->verb, $this->subNamespace);
-        if ($class === null) {
-            // consume next segment as a namespace
+        if ($this->nextSegmentIsNamespace()) {
             return;
         }
 
-        $this->class = $class;
-        $this->matchStaticTailSegment();
-        $this->matchRequiredSegments();
-        $this->matchOptionalSegments();
+        $this->captureOptionalArguments();
     }
 
-    protected function matchStaticTailSegment() : void
+    protected function captureSubNamespace() : void
     {
+        // consume next segment as a subnamespace
+        if (! empty($this->segments)) {
+            $segment = $this->segmentToNamespace(array_shift($this->segments));
+            $this->log("candidate namespace segment: {$segment}");
+            $this->subNamespace .= '\\' . $segment;
+        }
+
+        $this->log("find subnamespace: {$this->subNamespace}");
+
+        // does the subnamespace exist?
+        if (! $this->isSubNamespace($this->subNamespace)) {
+            // no, so no need to keep matching
+            $ns = rtrim($this->config->namespace, '\\') . $this->subNamespace;
+            $this->log("subnamespace not found");
+            throw new Exception\InvalidNamespace("Not a known namespace: $ns");
+        }
+
+        $this->log("subnamespace found");
+    }
+
+    protected function classNotFound() : void
+    {
+        $this->log("class not found");
+
+        if (! empty($this->segments)) {
+            // recursively capture next segment as a namespace
+            $this->captureSubNamespace();
+            return;
+        }
+
+        // no class, and no more segments
+        $this->log("segments empty");
+        $verb = strtoupper($this->verb);
+        $ns = rtrim($this->config->namespace, '\\') . $this->subNamespace;
+        throw new Exception\MethodNotAllowed("$verb action not found in namespace $ns");
+    }
+
+    protected function captureMainClass() : void
+    {
+        $expect = $this->actions->getClass($this->verb, $this->subNamespace);
+        $this->log("find class: {$expect}");
+        $class = $this->actions->hasAction($this->verb, $this->subNamespace);
+
+        if ($class === null) {
+            $this->classNotFound();
+            return;
+        }
+
+        $this->log("class found");
+        $this->class = $class;
+        $this->action = $this->actions->getAction($this->class);
+    }
+
+    protected function captureTailClass() : void
+    {
+        // there can be only one segment remaining
         if (count($this->segments) !== 1) {
             return;
         }
 
-        $segment = $this->actions->segmentToNamespace($this->segments[0]);
-        $temp = $this->actions->actionExists($this->verb, $this->subNamespace, $segment);
-        if ($temp !== null) {
-            array_shift($this->segments);
-            $this->subNamespace .= '\\' . $segment;
-            $this->class = $temp;
-        }
-    }
+        $segment = $this->segmentToNamespace($this->segments[0]);
+        $this->log("candidate static tail namepace segment: {$segment}");
+        $tailClass = $this->actions->hasAction($this->verb, $this->subNamespace, $segment);
 
-    protected function matchRequiredSegments()
-    {
-        // reflect on the action method
+        if ($tailClass === null) {
+            $this->log("static tail subnamespace not found");
+            return;
+        }
+
+        array_shift($this->segments);
+        $this->subNamespace .= '\\' . $segment;
+        $this->log("static tail class found: {$tailClass}");
+        $this->class = $tailClass;
         $this->action = $this->actions->getAction($this->class);
-
-        // consume one segment per required param, minus any dynamic segments
-        // we have already captured
-        $required = $this->action->getRequired() - count($this->dynamic);
-
-        if (count($this->segments) < $required) {
-            $method = $this->actions->getMethod();
-            throw new NotFound("Not enough segments for {$this->class}::{$method}().");
-        }
-
-        while ($required > 0) {
-            $this->dynamic[] = array_shift($this->segments);
-            $required --;
-        }
     }
 
-    protected function matchOptionalSegments()
+    protected function captureRequiredArguments() : void
     {
-        if (! $this->action->hasOptionals() || empty($this->segments)) {
-            // no optionals, or no segments to fulfill them
+        if (empty($this->segments)) {
             return;
         }
 
-        // is the segment a subnamespace?
-        $segment = $this->actions->segmentToNamespace($this->segments[0]);
+        $offset = count($this->arguments);
+        $requiredParameters = $this->action->getRequiredParameters($offset);
+
+        if (empty($requiredParameters)) {
+            $this->log('no additional required arguments');
+            return;
+        }
+
+        $this->log('capture additional required arguments');
+        $this->captureArguments($requiredParameters);
+    }
+
+    protected function nextSegmentIsNamespace() : bool
+    {
+        if (empty($this->segments)) {
+            return false;
+        }
+
+        $segment = $this->segmentToNamespace($this->segments[0]);
         $temp = $this->subNamespace . '\\' . $segment;
-        if ($this->actions->isSubNamespace($temp)) {
-            // yes, consume it as a subnamespace instead
+
+        if ($this->isSubNamespace($temp)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    protected function captureOptionalArguments() : void
+    {
+        if (empty($this->segments)) {
             return;
         }
 
-        // the segment is not a subnamespace; further routing to subnamespaces
-        // is terminated. consume optional params ...
-        $optional = $this->action->getOptional();
-        while ($optional > 0 && ! empty($this->segments)) {
-            $this->dynamic[] = array_shift($this->segments);
-            $optional --;
+        $optionalParameters = $this->action->getOptionalParameters();
+
+        if (empty($optionalParameters)) {
+            $this->log('no optional arguments');
+            return;
         }
 
-        // ... and variadic params.
-        while ($this->action->hasVariadic() && ! empty($this->segments)) {
-            $this->dynamic[] = array_shift($this->segments);
+        $this->log('capture optional arguments');
+        $this->captureArguments($optionalParameters);
+
+        if (empty($this->segments)) {
+            return;
         }
 
-        // routing is terminated; there cannot be any segments remaining.
-        if (! empty($this->segments)) {
-            $class = $this->action->getClass();
-            $method = $this->action->getMethod();
-            throw new NotFound("Too many router segments for {$class}::{$method}()");
+        $this->log("leftover segments");
+        $class = $this->action->getClass();
+        throw new Exception\NotFound("Too many router segments for {$class}");
+    }
+
+    protected function captureArguments(array $parameters) : void
+    {
+        if (empty($this->segments)) {
+            return;
+        }
+
+        foreach ($parameters as $i => $parameter) {
+            $this->captureArgument($parameter, $i);
         }
     }
 
-    protected function filter(array $parameters)
+    protected function captureArgument(ReflectionParameter $parameter, int $i) : void
     {
-        $input = $this->dynamic;
-        $output = [];
-
-        while (! empty($input)) {
-            $rp = array_shift($parameters);
-
-            // non-variadic values
-            if (! $rp->isVariadic()) {
-                $output[] = $this->filter->forAction($rp, array_shift($input));
-                continue;
-            }
-
-            // all remaining values as variadic
-            while (! empty($input)) {
-                $value = array_shift($input);
-                $output[] = $this->filter->forAction($rp, $value);
-            }
+        if (empty($this->segments)) {
+            return;
         }
 
-        return $output;
+        if ($parameter->isVariadic()) {
+            $this->captureVariadic($parameter, $i);
+            return;
+        }
+
+        $this->arguments[] = $this->filter->parameter($parameter, $this->segments);
+        $name = $parameter->getName();
+        $this->log("captured argument {$i} (\${$name})");
+    }
+
+    protected function captureVariadic(ReflectionParameter $parameter, int $i) : void
+    {
+        $name = $parameter->getName();
+
+        while (! empty($this->segments)) {
+            $this->arguments[] = $this->filter->parameter($parameter, $this->segments);
+            $this->log("captured variadic argument {$i} (\${$name})");
+        }
+    }
+
+    protected function segmentToNamespace(string $segment) : string
+    {
+        $segment = trim($segment);
+
+        if ($segment === '') {
+            throw new Exception\InvalidNamespace("Cannot convert empty segment to namespace part");
+        }
+
+        return str_replace(
+            $this->config->wordSeparator,
+            '',
+            ucwords($segment, $this->config->wordSeparator)
+        );
+    }
+
+    protected function isSubNamespace(string $subns) : bool
+    {
+        if (substr($subns, -2) == '..') {
+            throw new Exception\InvalidNamespace("Directory dots not allowed in segments");
+        }
+
+        $dir = $this->config->directory . str_replace('\\', DIRECTORY_SEPARATOR, $subns);
+        return is_dir($dir);
+    }
+
+    protected function getSegments(string $path) : array
+    {
+        $path = trim($path, '/');
+        $base = substr($path, 0, $this->config->baseUrlLen);
+
+        if ($base !== $this->config->baseUrl) {
+            throw new Exception\NotFound("Expected base URL /{$this->config->baseUrl}, actually /{$base}");
+        }
+
+        $segments = [];
+
+        $path = trim(substr($path, $this->config->baseUrlLen), '/');
+
+        if (! empty($path)) {
+            $segments = explode('/', $path);
+        }
+
+        return $segments;
+    }
+
+    public function getLogger() : LoggerInterface
+    {
+        return $this->logger;
+    }
+
+    protected function log(string $message) : void
+    {
+        $this->logger->debug($message);
     }
 }

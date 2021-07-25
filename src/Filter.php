@@ -14,48 +14,46 @@ use ReflectionParameter;
 
 class Filter
 {
-    public function forAction(ReflectionParameter $rp, /* mixed */ $value) // : mixed
+    public function __construct(protected Reflector $reflector)
     {
-        $isBlank = ($value === null);
+    }
 
-        if (is_string($value)) {
-            $isBlank = trim($value) === '';
+    public function parameter(ReflectionParameter $rp, array &$values) : mixed
+    {
+        $type = $this->reflector->getParameterType($rp);
+
+        if ($this->reflector->classExists($type)) {
+            return $this->toObject($rp, $type, $values);
         }
 
-        if (is_array($value)) {
-            $isBlank = empty($value);
-        }
+        $value = array_shift($values);
 
-        if ($isBlank) {
+        if ($this->isBlank($value)) {
             throw $this->invalidArgument($rp, 'non-blank', $value);
-        }
-
-        $type = $rp->getType();
-        if ($type === null) {
-            $type = 'string';
-        } else {
-            $type = $type->getName();
         }
 
         $method = 'to' . ucfirst($type);
         return $this->$method($rp, $value);
     }
 
-    public function forSegment(ReflectionParameter $rp, /* mixed */ $value) : string
+    protected function isBlank(mixed $value) : bool
     {
-        // do no capture the filtered value, just validate it
-        $this->forAction($rp, $value);
-
-        // only arrays cannot be cast to string
-        if (is_array($value)) {
-            return implode(',', $value);
+        if ($value === null) {
+            return true;
         }
 
-        // return what was passed, cast as a string for the URL path segment
-        return (string) $value;
+        if (is_string($value)) {
+            return trim($value) === '';
+        }
+
+        if (is_array($value)) {
+            return empty($value);
+        }
+
+        return false;
     }
 
-    protected function toArray(ReflectionParameter $rp, /* mixed */ $value) : array
+    protected function toArray(ReflectionParameter $rp, mixed $value) : array
     {
         if (is_array($value)) {
             return $value;
@@ -64,7 +62,7 @@ class Filter
         return str_getcsv((string) $value);
     }
 
-    protected function toBool(ReflectionParameter $rp, /* mixed */ $value) : bool
+    protected function toBool(ReflectionParameter $rp, mixed $value) : bool
     {
         if (is_bool($value)) {
             return $value;
@@ -81,7 +79,7 @@ class Filter
         throw $this->invalidArgument($rp, 'boolean-equivalent', $value);
     }
 
-    protected function toInt(ReflectionParameter $rp, /* mixed */ $value) : int
+    protected function toInt(ReflectionParameter $rp, mixed $value) : int
     {
         if (is_int($value)) {
             return $value;
@@ -94,7 +92,7 @@ class Filter
         throw $this->invalidArgument($rp, 'numeric integer', $value);
     }
 
-    protected function toFloat(ReflectionParameter $rp, /* mixed */ $value) : float
+    protected function toFloat(ReflectionParameter $rp, mixed $value) : float
     {
         if (is_float($value)) {
             return $value;
@@ -107,18 +105,58 @@ class Filter
         throw $this->invalidArgument($rp, 'numeric float', $value);
     }
 
-    protected function toString(ReflectionParameter $rp, /* mixed */ $value) : string
+    protected function toString(ReflectionParameter $rp, mixed $value) : string
     {
         return (string) $value;
     }
 
-    protected function invalidArgument(ReflectionParameter $rp, string $type, /* mixed */ $value) : InvalidArgument
+    protected function toMixed(ReflectionParameter $rp, mixed $value) : string
+    {
+        return (string) $value;
+    }
+
+    protected function toObject(
+        ReflectionParameter $rp,
+        string $type,
+        array &$values
+    ) : object
+    {
+        $args = [];
+        $ctorParams = $this->reflector->getConstructorParameters($type);
+
+        while (! empty($values) && ! empty($ctorParams)) {
+            $ctorParam = array_shift($ctorParams);
+            $paramType = $ctorParam->getType()->getName();
+            $method = 'to' . ucfirst($paramType);
+            $args[] = $this->$method($ctorParam, array_shift($values));
+        }
+
+        return new $type(...$args);
+    }
+
+    protected function invalidArgument(
+        ReflectionParameter $rp,
+        string $type,
+        mixed $value
+    ) : Exception\InvalidArgument
     {
         $pos = $rp->getPosition();
         $name = $rp->getName();
-        $class = $rp->getDeclaringClass()->getName();
+        $class = $rp->getDeclaringClass();
+
+        if ($class !== null) {
+            $class = $class->getName() . '::';
+        } else {
+            $class = '';
+        }
+
         $method = $rp->getDeclaringFunction()->getName();
         $value = var_export($value, true);
-        return new InvalidArgument("Expected {$type} argument for {$class}::{$method}() parameter {$pos} (\$$name), actually $value");
+        return new Exception\InvalidArgument(
+            "Expected {$type} argument "
+            . "for {$class}{$method}() "
+            . "parameter {$pos} (\$$name), "
+            . "actually $value"
+        );
     }
 }

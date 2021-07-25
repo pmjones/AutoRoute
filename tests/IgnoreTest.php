@@ -28,32 +28,31 @@ class IgnoreTest extends \PHPUnit\Framework\TestCase
     protected function setUp() : void
     {
         $autoRoute = new AutoRoute(
-            'AutoRoute\\HttpIgnore',
-            __DIR__ . '/HttpIgnore'
+            namespace: 'AutoRoute\\HttpIgnore',
+            directory: __DIR__ . '/HttpIgnore',
+            method: 'exec',
+            ignoreParams: 1,
+            wordSeparator: '_',
         );
 
-        $autoRoute->setMethod('exec');
-        $autoRoute->setIgnoreParams(1);
-        $autoRoute->setWordSeparator('_');
-
-        $this->router = $autoRoute->newRouter();
-        $this->generator = $autoRoute->newGenerator();
-        $this->dumper = $autoRoute->newDumper();
+        $this->router = $autoRoute->getRouter();
+        $this->generator = $autoRoute->getGenerator();
+        $this->dumper = $autoRoute->getDumper();
     }
 
     public function testRouter()
     {
         $route = $this->router->route('GET', '/foo_item/add');
         $this->assertSame(GetFooItemAdd::CLASS, $route->class);
-        $this->assertSame([], $route->params);
+        $this->assertSame([], $route->arguments);
 
         $route = $this->router->route('GET', '/foo_item/1');
         $this->assertSame(GetFooItem::CLASS, $route->class);
-        $this->assertSame([1], $route->params);
+        $this->assertSame([1], $route->arguments);
 
         $route = $this->router->route('GET', '/foo_item/1/edit');
         $this->assertSame(GetFooItemEdit::CLASS, $route->class);
-        $this->assertSame([1], $route->params);
+        $this->assertSame([1], $route->arguments);
     }
 
     public function testGenerator()
@@ -156,12 +155,12 @@ class IgnoreTest extends \PHPUnit\Framework\TestCase
             'Get' => 'AutoRoute\\HttpIgnore\\FooItem\\Edit\\GetFooItemEdit',
             'Head' => 'AutoRoute\\HttpIgnore\\FooItem\\Edit\\GetFooItemEdit',
           ),
-          '/foo_item/{int:id}/extras/{float:foo}/{string:bar}/{string:baz}/{bool:dib}[/{array:gir}]' =>
+          '/foo_item/{int:id}/extras/{float:foo}/{string:bar}/{mixed:baz}/{bool:dib}[/{array:gir}]' =>
           array (
             'Get' => 'AutoRoute\\HttpIgnore\\FooItem\\Extras\\GetFooItemExtras',
             'Head' => 'AutoRoute\\HttpIgnore\\FooItem\\Extras\\GetFooItemExtras',
           ),
-          '/foo_item/{int:id}/variadic[/{string:...more}]' =>
+          '/foo_item/{int:id}/variadic[/{...string:more}]' =>
           array (
             'Get' => 'AutoRoute\\HttpIgnore\\FooItem\\Variadic\\GetFooItemVariadic',
             'Head' => 'AutoRoute\\HttpIgnore\\FooItem\\Variadic\\GetFooItemVariadic',
@@ -198,7 +197,7 @@ class IgnoreTest extends \PHPUnit\Framework\TestCase
           ),
         );
 
-        $actual = $this->dumper->dumpRoutes();
+        $actual = $this->dumper->dump();
         $this->assertSame($expect, $actual);
     }
 }

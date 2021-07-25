@@ -34,7 +34,7 @@ cases -- even when FastRoute is using cached route definitions.
 - [How It Works](#how-it-works)
 - [Usage](#usage)
 - [Generating Route Paths](#generating-route-paths)
-- [Alternative Configurations](#alternative-configurations)
+- [Custom Configuration](#custom-configuration)
 - [Dumping All Routes](#dumping-all-routes)
 - [Creating Classes From Routes](#creating-classes-from-routes)
 - [Questions and Recipes](#questions-and-recipes)
@@ -244,9 +244,22 @@ App/
                 GetPhotoEdit.php    GET /photo/1/edit   (form for updating)
 ```
 
+### HEAD Requests
+
+[RFC 2616](http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.1)
+requires that "methods GET and HEAD **must** be supported by all general-purpose
+servers".
+
+As such, AutoRoute will automatically fall back to a `Get*` action class if a
+relevant `Head*` action class is not found. This keeps you from having to create
+a `Head*` class for every possible `Get*` action.
+
+However, you may still define any `Head*` action class you like, and AutoRoute
+will use it.
+
 ## Usage
 
-Instantiate the _AutoRoute_ container class with the top-level HTTP action
+Instantiate the AutoRoute container class with the top-level HTTP action
 namespace and the directory path to classes in that namespace:
 
 ```php
@@ -258,31 +271,42 @@ $autoRoute = new AutoRoute(
 );
 ```
 
+You may use named constructor parameters if you wish:
+
+
+```php
+use AutoRoute\AutoRoute;
+
+$autoRoute = new AutoRoute(
+    namespace: 'App\Http',
+    directory: dirname(__DIR__) . '/src/App/Http/',
+);
+```
+
 Then, pull a new _Router_ out of the container ...
 
 ```php
-$router = $autoRoute->newRouter();
+$router = $autoRoute->getRouter();
 ```
 
 ... and call `route()` with the HTTP request method verb and the path string to
 get back a _Route_, catching exceptions along the way:
 
 ```php
+use AutoRoute\Exception;
+
 try {
     $route = $router->route($request->method, $request->url[PHP_URL_PATH]);
-
-} catch (\AutoRoute\InvalidNamespace $e) {
+} catch (Exception\InvalidNamespace $e) {
     // 400 Bad Request
-
-} catch (\AutoRoute\InvalidArgument $e) {
+} catch (Exception\InvalidArgument $e) {
     // 400 Bad Request
-
-} catch (\AutoRoute\NotFound $e) {
+} catch (Exception\NotFound $e) {
     // 404 Not Found
-
-} catch (\AutoRoute\MethodNotAllowed $e) {
+} catch (Exception\MethodNotAllowed $e) {
     // 405 Method Not Allowed
-
+} catch (\Throwable) {
+    // 500 Server Error
 }
 ```
 
@@ -295,15 +319,31 @@ $action = Factory::newInstance($route->class);
 
 // call the action instance with the method and params,
 // presumably getting back an HTTP Response
-$response = call_user_func([$action, $route->method], ...$route->params);
+$response = call_user_func([$action, $route->method], ...$route->arguments);
 ```
+
+## Debugging
+
+To see how the _Router_ gets where it does, call its `getLogger()` method,
+then get the array of logger messages from the default _AutoRoute\Logger_:
+
+```php
+$route = $router->route($request->method, $request->path);
+$logger = $router->getLogger();
+print_r($logger->getMessages());
+```
+
+> **Note:**
+>
+> You may inject a custom PSR-3 _LoggerInterface_ implementation factory as part
+> of [custom configuration](#custom-configuration).
 
 ## Generating Route Paths
 
-Using the _AutoRoute_ container, pull out a new _Generator_:
+Using the AutoRoute container, pull out a new _Generator_:
 
 ```php
-$generator = $autoRoute->newGenerator();
+$generator = $autoRoute->getGenerator();
 ```
 
 Then call the `generate()` method with the action class name, along with any
@@ -330,60 +370,28 @@ method signature to make sure the values will be recognized by the _Router_.
 This means that you cannot (or at least, should not!) be able to generate a
 path that the _Router_ will not recognize.
 
-## Alternative Configurations
+## Custom Configuration
 
-Set these options on the _AutoRoute_ container before pulling out a new
-_Router_ or _Generator_.
+You may set these named constructor parameters at AutoRoute instantiation time
+to configure its behavior.
 
-### Class Name Suffix
+### `baseUrl`
 
-If your code base gives all action class names the same suffix, such as
-"Action", you can tell _AutoRoute_ to disregard that suffix like so:
-
-```php
-$autoRoute->setSuffix('Action');
-```
-
-The _Router_ and _Generator_ will now ignore the suffix portion of the class
-name.
-
-### Method
-
-If you use an action method name other than `__invoke()`, such as `exec()` or
-`run()`, you can tell _AutoRoute_ to reflect on its parameters instead:
+You may specify a base URL (i.e., a URL path prefix) using the following
+named constructor parameter:
 
 ```php
-$autoRoute->setMethod('exec');
-```
-
-The _Router_ and _Generator_ will now examine the `exec()` method to determine
-the dynamic segments of the URL path.
-
-### Base URL
-
-You may specify a base URL (i.e., a URL path prefix) like so:
-
-```php
-$autoRoute->setBaseUrl('/api');
+$autoRoute = new AutoRoute(
+    // ...
+    baseUrl: '/api',
+);
 ```
 
 The _Router_ will ignore the base URL when determining the target action class
 for the route, and the _Generator_ will prefix all paths with the base URL.
 
-### Word Separator
 
-By default, the _Router_ and _Generator_ will inflect static URL path segments
-from `foo-bar` to `FooBar`, using the dash as a word separator. If you want to
-use a different word separator, such as an underscore, you may do so like this:
-
-```php
-$autoRoute->setWordSeparator('_');
-```
-
-This will cause the _Router_ and _Generator_ to inflect from `foo_bar` to
-`FooBar` (and back again).
-
-### Ignoring Action Method Parameters
+### `ignore`
 
 Some UI systems may use a shared Request object, in which case it is easy to
 inject the Request into the action constructor. However, other systems may
@@ -393,7 +401,7 @@ some way other than via the constructor.
 
 Typically, these kinds of parameters are passed at the moment the action is
 called, which means they must be part of the aciton method signature. However,
-_AutoRoute_ will see that parameter and incorrectly interpret it as a dynamic
+AutoRoute will see that parameter and incorrectly interpret it as a dynamic
 segment; for example:
 
 ```php
@@ -410,12 +418,15 @@ class PatchPhoto
 }
 ```
 
-To remedy this, _AutoRoute_ can skip over any number of leading parameters
-on the action method. To do so, set the number of parameters to ignore at the
-_AutoRoute_ container ...
+To remedy this, AutoRoute can skip over any number of leading parameters
+on the action method. To do so, set the number of parameters to ignore using the
+following named constructor parameter:
 
 ```php
-$autoRoute->setIgnoreParams(1);
+$autoRoute = new AutoRoute(
+    // ...
+    ignoreParams: 1,
+);
 ```
 
 ... and then any new _Router_ and _Generator_ will ignore the first parameter.
@@ -431,8 +442,72 @@ $route = $router->route($request->method, $request->url[PHP_URL_PATH]);
 $action = Factory::newInstance($route->class);
 
 // pass the request first, then any route params
-$response = call_user_func($action, $route->method, $request, ...$route->params);
+$response = call_user_func([$action, $route->method], $request, ...$route->arguments);
 ```
+
+### `loggerFactory`
+
+To inject a custom PSR-3 Logger instance into the _Router_, use the following
+named constructor parameter:
+
+```php
+$autoRoute = new AutoRoute(
+    // ...
+    loggerFactory: function () {
+        // return a \Psr\Log\LoggerInterface implementation
+    },
+);
+```
+
+### `method`
+
+If you use an action method name other than `__invoke()`, such as `exec()` or
+`run()`, you can tell AutoRoute to reflect on its parameters instead using the
+following named constructor parameter:
+
+```php
+$autoRoute = new AutoRoute(
+    // ...
+    method: 'exec',
+);
+```
+
+The _Router_ and _Generator_ will now examine the `exec()` method to determine
+the dynamic segments of the URL path.
+
+### `suffix`
+
+If your code base gives all action class names the same suffix, such as
+"Action", you can tell AutoRoute to disregard that suffix using the following
+named constructor parameter:
+
+```php
+$autoRoute = new AutoRoute(
+    // ...
+    suffix: 'Action',
+);
+
+```
+
+The _Router_ and _Generator_ will now ignore the suffix portion of the class
+name.
+
+### `wordSeparator`
+
+By default, the _Router_ and _Generator_ will inflect static URL path segments
+from `foo-bar` to `FooBar`, using the dash as a word separator. If you want to
+use a different word separator, such as an underscore, you may do using the
+following named constructor parameter:
+
+```php
+$autoRoute = new AutoRoute(
+    // ...
+    wordSeparator: '_',
+);
+```
+
+This will cause the _Router_ and _Generator_ to inflect from `foo_bar` to
+`FooBar` (and back again).
 
 
 ## Dumping All Routes
@@ -479,7 +554,7 @@ You can specify alternative configurations with these command line options:
 
 ## Creating Classes From Routes
 
-_AutoRoute_ provides minimalist support for creating class files based on a
+AutoRoute provides minimalist support for creating class files based on a
 route verb and path, using a template.
 
 To do so, invoke `autoroute-create.php` with the base namespace, the directory
@@ -626,12 +701,11 @@ class PatchCompanyEmployee // parent resource: PatchCompany
 }
 ```
 
-
 ### Fine-Grained Input Validation
 
 Q: How do I specify something similar to the regex route `path('/foo/{id}')->token(['id' => '\d{4}'])` ?
 
-A: You don't.
+A: You don't. (However, see the topic on "Value Objects as Action Parameters", below.)
 
 Your domain does fine validation of the inputs, not your routing system (coarse
 validation only). AutoRoute, in casting the params to arguments, will set the
@@ -697,6 +771,144 @@ class PhotoService
     }
 }
 ```
+
+### Value Objects as Action Parameters
+
+Q: Can I use an object (instead of a scalar or array) as an action parameter?
+
+A: Yes, with some caveats.
+
+Although you cannot specify input validation in the routing itself, per se, you
+*can* specify a value object as parameter, and do validation within its
+constructor. These value objects may come from anywhere, including the Domain.
+
+For example, your underlying Application Service classes might need Domain
+value objects as inputs, with the action creating those value objects itself:
+
+```php
+namespace App\Http\Company;
+
+use Domain\Company\CompanyId;
+
+class GetCompany
+{
+    // ...
+    public function __invoke(int $companyId)
+    {
+        // ...
+        $payload = $this->domain->fetchCompany(
+            new CompanyId($companyId)
+        );
+        // ...
+    }
+}
+```
+
+The corresponding value object might look like this:
+
+```php
+namespace Domain\Company;
+
+use Domain\ValueObject;
+
+class CompanyId extends ValueObject
+{
+    public function __construct(protected int $companyId)
+    {
+    }
+}
+```
+
+To avoid the manual conversion of dynamic path segments to value objects, you
+may use the value object type itself as an action parameter, like so:
+
+```php
+namespace App\Http\Company;
+
+use Domain\Company\CompanyId;
+
+class GetCompany
+{
+    // ...
+    public function __invoke(CompanyId $companyId)
+    {
+        // ...
+        $payload = $this->domain->fetchCompany($companyId);
+        // ...
+    }
+}
+```
+
+Given the HTTP request `GET /company/1`, the _Router_ will notice that the
+action parameter is of the _CompanyId_ type, and use the relevant segments of
+the URL path to build the _CompanyId_ argument.
+
+Further, you can attempt to validate and/or sanitize the value object arguments,
+throwing an exception on invalidation. For example:
+
+```php
+namespace Domain\Photo;
+
+use Domain\Exception\InvalidValue;
+use Domain\ValueObject;
+
+class Year extends ValueObject
+{
+    public function __construct(protected int $year)
+    {
+        if ($this->year < 0 || $this->year > 9999) {
+            throw new InvalidValue("The year must be between 0000 and 9999").
+        }
+    }
+}
+```
+
+It is up to you to catch these exceptions and send the appropriate HTTP
+response.
+
+Some additional notes:
+
+- You can use as many value object constructor parameters as you like; each
+  parameter will capture one path segment, in order.
+
+- The path segments will be cast to the correct data types for you, per the
+  value object constructor parameter typehints.
+
+- Using a class type as a value object parameter will not work correctly; use
+  only scalars and arrays as value object parameter types.
+
+- Using optional or variadic parameters in a value object may not always work as
+  intended. If your value objects have optional or variadic parameters, save
+  those value objects for the terminating portions of URL paths.
+
+- You can combine value object parameters with scalar and array parameters in
+  the action method signature.
+
+#### Generating Paths With Value Objects
+
+When generating a path for an action that uses value objects, you need to pass
+the individual arguments as they would appear in the URL, not as they appear
+when calling the action. Given the above _GetCompany_ action, you would not
+instantiate _CompanyId_; instead, you would pass the integer value argument.
+
+```php
+// wrong:
+$path = $generator->generate(GetCompany::CLASS, new CompanyId(1));
+
+// right:
+$path = $generator->generate(GetCompany::CLASS, 1);
+
+```
+
+#### Dumping Paths With Value Objects
+
+When you dump the routes via the _Dumper_, you will find that the dynamic
+segments associated with value objects are named for the value object
+constructor parameters. If you have multiple value objects in an action method
+signature, and those value objects use the same parameter names in their
+constructors, you will see repetition of those names in the dumped path. This
+does not cause any ill effect to AutoRoute itself, though it might be confusing
+when reviewing the path strings.
 
 ### Capturing Other Request Values
 

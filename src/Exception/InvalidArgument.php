@@ -8,7 +8,7 @@
  */
 declare(strict_types=1);
 
-namespace AutoRoute;
+namespace AutoRoute\Exception;
 
 class InvalidArgument extends Exception
 {

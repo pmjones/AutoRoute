@@ -8,12 +8,12 @@ class DumperTest extends \PHPUnit\Framework\TestCase
     public function testDumpRoutes()
     {
         $autoRoute = new AutoRoute(
-            'AutoRoute\\Http',
-            __DIR__ . DIRECTORY_SEPARATOR . 'Http'
+            namespace: 'AutoRoute\\Http',
+            directory: __DIR__ . DIRECTORY_SEPARATOR . 'Http',
+            baseUrl: '/api/',
         );
 
-        $autoRoute->setBaseUrl('/api/');
-        $dumper = $autoRoute->newDumper();
+        $dumper = $autoRoute->getDumper();
 
         $expect = array (
           '/api' =>
@@ -47,12 +47,12 @@ class DumperTest extends \PHPUnit\Framework\TestCase
             'Get' => 'AutoRoute\\Http\\FooItem\\Edit\\GetFooItemEdit',
             'Head' => 'AutoRoute\\Http\\FooItem\\Edit\\GetFooItemEdit',
           ),
-          '/api/foo-item/{int:id}/extras/{float:foo}/{string:bar}/{string:baz}/{bool:dib}[/{array:gir}]' =>
+          '/api/foo-item/{int:id}/extras/{float:foo}/{string:bar}/{mixed:baz}/{bool:dib}[/{array:gir}]' =>
           array (
             'Get' => 'AutoRoute\\Http\\FooItem\\Extras\\GetFooItemExtras',
             'Head' => 'AutoRoute\\Http\\FooItem\\Extras\\GetFooItemExtras',
           ),
-          '/api/foo-item/{int:id}/variadic[/{string:...more}]' =>
+          '/api/foo-item/{int:id}/variadic[/{...string:more}]' =>
           array (
             'Get' => 'AutoRoute\\Http\\FooItem\\Variadic\\GetFooItemVariadic',
             'Head' => 'AutoRoute\\Http\\FooItem\\Variadic\\GetFooItemVariadic',
@@ -89,7 +89,7 @@ class DumperTest extends \PHPUnit\Framework\TestCase
           ),
         );
 
-        $actual = $dumper->dumpRoutes();
+        $actual = $dumper->dump();
         $this->assertSame($expect, $actual);
     }
 
@@ -100,7 +100,7 @@ class DumperTest extends \PHPUnit\Framework\TestCase
             __DIR__ . DIRECTORY_SEPARATOR . 'Http'
         );
 
-        $dumper = $autoRoute->newDumper();
+        $dumper = $autoRoute->getDumper();
 
         $expect = array (
           '/' =>
@@ -134,12 +134,12 @@ class DumperTest extends \PHPUnit\Framework\TestCase
             'Get' => 'AutoRoute\\Http\\FooItem\\Edit\\GetFooItemEdit',
             'Head' => 'AutoRoute\\Http\\FooItem\\Edit\\GetFooItemEdit',
           ),
-          '/foo-item/{int:id}/extras/{float:foo}/{string:bar}/{string:baz}/{bool:dib}[/{array:gir}]' =>
+          '/foo-item/{int:id}/extras/{float:foo}/{string:bar}/{mixed:baz}/{bool:dib}[/{array:gir}]' =>
           array (
             'Get' => 'AutoRoute\\Http\\FooItem\\Extras\\GetFooItemExtras',
             'Head' => 'AutoRoute\\Http\\FooItem\\Extras\\GetFooItemExtras',
           ),
-          '/foo-item/{int:id}/variadic[/{string:...more}]' =>
+          '/foo-item/{int:id}/variadic[/{...string:more}]' =>
           array (
             'Get' => 'AutoRoute\\Http\\FooItem\\Variadic\\GetFooItemVariadic',
             'Head' => 'AutoRoute\\Http\\FooItem\\Variadic\\GetFooItemVariadic',
@@ -176,7 +176,7 @@ class DumperTest extends \PHPUnit\Framework\TestCase
           ),
         );
 
-        $actual = $dumper->dumpRoutes();
+        $actual = $dumper->dump();
         $this->assertSame($expect, $actual);
     }
 }
