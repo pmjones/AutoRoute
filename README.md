@@ -283,7 +283,7 @@ $autoRoute = new AutoRoute(
 );
 ```
 
-Then, pull a new _Router_ out of the container ...
+Then, pull the _Router_ out of the container ...
 
 ```php
 $router = $autoRoute->getRouter();
@@ -340,7 +340,7 @@ print_r($logger->getMessages());
 
 ## Generating Route Paths
 
-Using the AutoRoute container, pull out a new _Generator_:
+Using the AutoRoute container, pull out the _Generator_:
 
 ```php
 $generator = $autoRoute->getGenerator();
