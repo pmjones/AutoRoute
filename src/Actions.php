@@ -13,6 +13,8 @@ namespace AutoRoute;
 use DirectoryIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use RecursiveRegexIterator;
+use RegexIterator;
 
 class Actions
 {
@@ -166,24 +168,19 @@ class Actions
     public function getClasses() : array
     {
         $classes = [];
-        $files = [];
 
-        $items = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator(
-                $this->config->directory
-            )
+        $files = new RegexIterator(
+            new RecursiveIteratorIterator(
+                 new RecursiveDirectoryIterator(
+                    $this->config->directory
+                )
+            ),
+            '/^.*\.php$/',
+            RecursiveRegexIterator::GET_MATCH
         );
 
-        foreach ($items as $item) {
-            $file = $item->getPathname();
-
-            if (substr($file, -4) == '.php') {
-                $files[] = $file;
-            }
-        }
-
         foreach ($files as $file) {
-            $class = $this->fileToClass($file);
+            $class = $this->fileToClass($file[0]);
 
             if ($class !== null) {
                 $classes[] = $class;
