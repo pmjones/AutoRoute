@@ -119,6 +119,16 @@ class Actions
         return $this->reflector->classExists($class) ? $class : null;
     }
 
+    public function hasSubNamespace(string $subNamespace) : bool
+    {
+        if (strpos($subNamespace, '..') !== false) {
+            throw new Exception\NotFound("Directory dots not allowed in segments");
+        }
+
+        $dir = $this->config->directory . str_replace('\\', DIRECTORY_SEPARATOR, $subNamespace);
+        return is_dir($dir);
+    }
+
     public function getAllowed(string $subNamespace) : array
     {
         $verbs = [];

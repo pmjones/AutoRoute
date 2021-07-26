@@ -103,7 +103,7 @@ class Router
         $this->log("find subnamespace: {$this->subNamespace}");
 
         // does the subnamespace exist?
-        if (! $this->isSubNamespace($this->subNamespace)) {
+        if (! $this->actions->hasSubNamespace($this->subNamespace)) {
             // no, so no need to keep matching
             $ns = rtrim($this->config->namespace, '\\') . $this->subNamespace;
             $this->log("subnamespace not found");
@@ -203,7 +203,7 @@ class Router
         $segment = $this->segmentToNamespace($this->segments[0]);
         $temp = $this->subNamespace . '\\' . $segment;
 
-        if ($this->isSubNamespace($temp)) {
+        if ($this->actions->hasSubNamespace($temp)) {
             return true;
         }
 
@@ -285,16 +285,6 @@ class Router
             '',
             ucwords($segment, $this->config->wordSeparator)
         );
-    }
-
-    protected function isSubNamespace(string $subns) : bool
-    {
-        if (substr($subns, -2) == '..') {
-            throw new Exception\NotFound("Directory dots not allowed in segments");
-        }
-
-        $dir = $this->config->directory . str_replace('\\', DIRECTORY_SEPARATOR, $subns);
-        return is_dir($dir);
     }
 
     protected function getSegments(string $path) : array
