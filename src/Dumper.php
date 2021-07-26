@@ -25,31 +25,10 @@ class Dumper
 
     public function dump() : array
     {
-        $files = $this->getFiles();
+        $files = $this->actions->getFiles();
         $classes = $this->getClassesFromFiles($files);
         $urls = $this->getUrlsFromClasses($classes);
         return $urls;
-    }
-
-    protected function getFiles() : array
-    {
-        $files = [];
-
-        $items = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator(
-                $this->config->directory
-            )
-        );
-
-        foreach ($items as $item) {
-            $file = $item->getPathname();
-
-            if (substr($file, -4) == '.php') {
-                $files[] = $file;
-            }
-        }
-
-        return $files;
     }
 
     protected function getClassesFromFiles(array $files) : array

@@ -11,6 +11,8 @@ declare(strict_types=1);
 namespace AutoRoute;
 
 use DirectoryIterator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 
 class Actions
 {
@@ -160,4 +162,26 @@ class Actions
         sort($verbs);
         return $verbs;
     }
+
+    public function getFiles() : array
+    {
+        $files = [];
+
+        $items = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator(
+                $this->config->directory
+            )
+        );
+
+        foreach ($items as $item) {
+            $file = $item->getPathname();
+
+            if (substr($file, -4) == '.php') {
+                $files[] = $file;
+            }
+        }
+
+        return $files;
+    }
+
 }
