@@ -10,8 +10,6 @@ declare(strict_types=1);
 
 namespace AutoRoute;
 
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 use ReflectionParameter;
 
 class Dumper
