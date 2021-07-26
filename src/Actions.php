@@ -183,5 +183,4 @@ class Actions
 
         return $files;
     }
-
 }
