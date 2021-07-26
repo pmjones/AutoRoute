@@ -23,26 +23,9 @@ class Dumper
 
     public function dump() : array
     {
-        $files = $this->actions->getFiles();
-        $classes = $this->getClassesFromFiles($files);
+        $classes = $this->actions->getClasses();
         $urls = $this->getUrlsFromClasses($classes);
         return $urls;
-    }
-
-    protected function getClassesFromFiles(array $files) : array
-    {
-        $classes = [];
-
-        foreach ($files as $file) {
-            $class = $this->fileToClass($file);
-
-            if ($class !== null) {
-                $classes[] = $class;
-            }
-        }
-
-        sort($classes);
-        return $classes;
     }
 
     protected function getUrlsFromClasses(array $classes) : array
@@ -61,27 +44,6 @@ class Dumper
 
         ksort($urls);
         return $urls;
-    }
-
-    protected function fileToClass(string $file) : ?string
-    {
-        $file = str_replace($this->config->directory . DIRECTORY_SEPARATOR, '', substr($file, 0, -4));
-        $parts = explode(DIRECTORY_SEPARATOR, $file);
-        $last = array_pop($parts);
-        $core = implode('', $parts);
-        $verb = substr($last, 0, strlen($last) - strlen($core) - $this->config->suffixLen);
-
-        if ($verb === '') {
-            return null;
-        }
-
-        $subNamespace = '';
-
-        if (! empty($parts)) {
-            $subNamespace = '\\' . implode('\\', $parts);
-        }
-
-        return $this->actions->hasAction($verb, $subNamespace);
     }
 
     protected function namedPath(Reverse $reverse) : string

@@ -163,8 +163,9 @@ class Actions
         return $verbs;
     }
 
-    public function getFiles() : array
+    public function getClasses() : array
     {
+        $classes = [];
         $files = [];
 
         $items = new RecursiveIteratorIterator(
@@ -181,6 +182,36 @@ class Actions
             }
         }
 
-        return $files;
+        foreach ($files as $file) {
+            $class = $this->fileToClass($file);
+
+            if ($class !== null) {
+                $classes[] = $class;
+            }
+        }
+
+        sort($classes);
+        return $classes;
+    }
+
+    protected function fileToClass(string $file) : ?string
+    {
+        $file = str_replace($this->config->directory . DIRECTORY_SEPARATOR, '', substr($file, 0, -4));
+        $parts = explode(DIRECTORY_SEPARATOR, $file);
+        $last = array_pop($parts);
+        $core = implode('', $parts);
+        $verb = substr($last, 0, strlen($last) - strlen($core) - $this->config->suffixLen);
+
+        if ($verb === '') {
+            return null;
+        }
+
+        $subNamespace = '';
+
+        if (! empty($parts)) {
+            $subNamespace = '\\' . implode('\\', $parts);
+        }
+
+        return $this->hasAction($verb, $subNamespace);
     }
 }
