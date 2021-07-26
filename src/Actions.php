@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace AutoRoute;
 
+use DirectoryIterator;
+
 class Actions
 {
     protected array $instances = [];
@@ -115,5 +117,37 @@ class Actions
 
         $class = $this->getClass('Get', $subNamespace, $tail);
         return $this->reflector->classExists($class) ? $class : null;
+    }
+
+    public function getAllowed(string $subNamespace) : array
+    {
+        $verbs = [];
+        $class = $this->getClass('', $subNamespace);
+        $parts = explode('\\', $class);
+        $main = end($parts). '.php';
+        $mainLen = -1 * strlen($main);
+        $dir = $this->config->directory . str_replace('\\', DIRECTORY_SEPARATOR, $subNamespace);
+        $items = new DirectoryIterator($dir);
+
+        foreach ($items as $item) {
+            $file = $item->getFilename();
+
+            if (substr($file, -4) !== '.php') {
+                continue;
+            }
+
+            $verb = substr($file, 0, $mainLen);
+
+            if ($verb !== '') {
+                $verbs[] = strtoupper($verb);
+            }
+        }
+
+        if (in_array('GET', $verbs) && ! in_array('HEAD', $verbs)) {
+            $verbs[] = 'HEAD';
+        }
+
+        sort($verbs);
+        return $verbs;
     }
 }

@@ -10,7 +10,6 @@ declare(strict_types=1);
 
 namespace AutoRoute;
 
-use DirectoryIterator;
 use Psr\Log\LoggerInterface;
 use ReflectionParameter;
 use Throwable;
@@ -127,14 +126,14 @@ class Router
         // no class, and no more segments
         $this->log("segments empty");
         $ns = rtrim($this->config->namespace, '\\') . $this->subNamespace;
-        $allowed = $this->getAllowed();
+        $allowed = $this->actions->getAllowed($this->subNamespace);
 
-        if ($allowed === '') {
+        if (empty($allowed)) {
             throw new Exception\NotFound("No actions found in namespace {$ns}");
         }
 
         $verb = strtoupper($this->verb);
-        $this->headers = ['allowed' => $allowed];
+        $this->headers = ['allowed' => implode(',', $allowed)];
         throw new Exception\MethodNotAllowed("$verb action not found in namespace $ns");
     }
 
@@ -326,37 +325,5 @@ class Router
     protected function log(string $message) : void
     {
         $this->logger->debug($message);
-    }
-
-    protected function getAllowed() : string
-    {
-        $verbs = [];
-        $class = $this->actions->getClass('', $this->subNamespace);
-        $parts = explode('\\', $class);
-        $main = end($parts). '.php';
-        $mainLen = -1 * strlen($main);
-        $dir = $this->config->directory . str_replace('\\', DIRECTORY_SEPARATOR, $this->subNamespace);
-        $items = new DirectoryIterator($dir);
-
-        foreach ($items as $item) {
-            $file = $item->getFilename();
-
-            if (substr($file, -4) !== '.php') {
-                continue;
-            }
-
-            $verb = substr($file, 0, $mainLen);
-
-            if ($verb !== '') {
-                $verbs[] = strtoupper($verb);
-            }
-        }
-
-        if (in_array('GET', $verbs) && ! in_array('HEAD', $verbs)) {
-            $verbs[] = 'HEAD';
-        }
-
-        sort($verbs);
-        return implode(',', $verbs);
     }
 }
