@@ -10,8 +10,10 @@ declare(strict_types=1);
 
 namespace AutoRoute;
 
+use DirectoryIterator;
 use Psr\Log\LoggerInterface;
 use ReflectionParameter;
+use Throwable;
 
 class Router
 {
@@ -27,6 +29,8 @@ class Router
 
     protected string $verb = '';
 
+    protected array $headers = [];
+
     public function __construct(
         protected Config $config,
         protected Actions $actions,
@@ -39,21 +43,39 @@ class Router
     {
         $this->log("{$verb} {$path}");
         $this->verb = ucfirst(strtolower($verb));
-        $this->segments = $this->getSegments($path);
         $this->subNamespace = '';
         $this->class = '';
         $this->action = new NullAction();
         $this->arguments = [];
 
+        try {
+            $this->segments = $this->getSegments($path);
+            $this->captureLoop();
+
+            return new Route(
+                $this->action->getClass(),
+                $this->config->method,
+                $this->arguments
+            );
+        } catch (Throwable $e) {
+            return new Route(
+                $this->class,
+                $this->config->method,
+                $this->arguments,
+                get_class($e),
+                $e,
+                $this->headers
+            );
+        }
+    }
+
+    protected function captureLoop() : void
+    {
         do {
             $this->capture();
         } while (! empty($this->segments));
 
-        return new Route(
-            $this->action->getClass(),
-            $this->config->method,
-            $this->arguments
-        );
+        $this->log("segments empty");
     }
 
     protected function capture() : void
@@ -86,7 +108,7 @@ class Router
             // no, so no need to keep matching
             $ns = rtrim($this->config->namespace, '\\') . $this->subNamespace;
             $this->log("subnamespace not found");
-            throw new Exception\InvalidNamespace("Not a known namespace: $ns");
+            throw new Exception\NotFound("Not a known namespace: $ns");
         }
 
         $this->log("subnamespace found");
@@ -97,15 +119,22 @@ class Router
         $this->log("class not found");
 
         if (! empty($this->segments)) {
-            // recursively capture next segment as a namespace
-            $this->captureSubNamespace();
+            // recursively capture next segment
+            $this->capture();
             return;
         }
 
         // no class, and no more segments
         $this->log("segments empty");
-        $verb = strtoupper($this->verb);
         $ns = rtrim($this->config->namespace, '\\') . $this->subNamespace;
+        $allowed = $this->getAllowed();
+
+        if ($allowed === '') {
+            throw new Exception\NotFound("No actions found in namespace {$ns}");
+        }
+
+        $verb = strtoupper($this->verb);
+        $this->headers = ['allowed' => $allowed];
         throw new Exception\MethodNotAllowed("$verb action not found in namespace $ns");
     }
 
@@ -249,7 +278,7 @@ class Router
         $segment = trim($segment);
 
         if ($segment === '') {
-            throw new Exception\InvalidNamespace("Cannot convert empty segment to namespace part");
+            throw new Exception\NotFound("Cannot convert empty segment to namespace part");
         }
 
         return str_replace(
@@ -262,7 +291,7 @@ class Router
     protected function isSubNamespace(string $subns) : bool
     {
         if (substr($subns, -2) == '..') {
-            throw new Exception\InvalidNamespace("Directory dots not allowed in segments");
+            throw new Exception\NotFound("Directory dots not allowed in segments");
         }
 
         $dir = $this->config->directory . str_replace('\\', DIRECTORY_SEPARATOR, $subns);
@@ -297,5 +326,37 @@ class Router
     protected function log(string $message) : void
     {
         $this->logger->debug($message);
+    }
+
+    protected function getAllowed() : string
+    {
+        $verbs = [];
+        $class = $this->actions->getClass('', $this->subNamespace);
+        $parts = explode('\\', $class);
+        $main = end($parts). '.php';
+        $mainLen = -1 * strlen($main);
+        $dir = $this->config->directory . str_replace('\\', DIRECTORY_SEPARATOR, $this->subNamespace);
+        $items = new DirectoryIterator($dir);
+
+        foreach ($items as $item) {
+            $file = $item->getFilename();
+
+            if (substr($file, -4) !== '.php') {
+                continue;
+            }
+
+            $verb = substr($file, 0, $mainLen);
+
+            if ($verb !== '') {
+                $verbs[] = strtoupper($verb);
+            }
+        }
+
+        if (in_array('GET', $verbs) && ! in_array('HEAD', $verbs)) {
+            $verbs[] = 'HEAD';
+        }
+
+        sort($verbs);
+        return implode(',', $verbs);
     }
 }

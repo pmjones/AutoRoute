@@ -82,28 +82,28 @@ class Actions
     public function getClass(
         string $verb,
         string $subNamespace,
-        string $append = ''
+        string $tail = ''
     ) : ?string
     {
         $base = rtrim($this->config->namespace, '\\')
             . $subNamespace
             . '\\';
 
-        if ($append !== '') {
-            $base .= $append . '\\';
+        if ($tail !== '') {
+            $base .= $tail . '\\';
         }
 
-        $ending = str_replace('\\', '', $subNamespace . $append) . $this->config->suffix;
+        $ending = str_replace('\\', '', $subNamespace . $tail) . $this->config->suffix;
         return $base . $verb . $ending;
     }
 
     public function hasAction(
         string $verb,
         string $subNamespace,
-        string $append = ''
+        string $tail = ''
     ) : ?string
     {
-        $class = $this->getClass($verb, $subNamespace, $append);
+        $class = $this->getClass($verb, $subNamespace, $tail);
 
         if ($this->reflector->classExists($class)) {
             return $class;
@@ -113,7 +113,7 @@ class Actions
             return null;
         }
 
-        $class = $this->getClass('Get', $subNamespace, $append);
+        $class = $this->getClass('Get', $subNamespace, $tail);
         return $this->reflector->classExists($class) ? $class : null;
     }
 }

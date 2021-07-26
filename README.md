@@ -273,7 +273,6 @@ $autoRoute = new AutoRoute(
 
 You may use named constructor parameters if you wish:
 
-
 ```php
 use AutoRoute\AutoRoute;
 
@@ -283,44 +282,52 @@ $autoRoute = new AutoRoute(
 );
 ```
 
-Then, pull the _Router_ out of the container ...
+Then pull the _Router_ out of the container, and call `route()` with the HTTP
+request method verb and the path string to get back a _Route_:
 
 ```php
 $router = $autoRoute->getRouter();
+$route = $router->route($request->method, $request->url[PHP_URL_PATH]);
 ```
 
-... and call `route()` with the HTTP request method verb and the path string to
-get back a _Route_, catching exceptions along the way:
+You can then dispatch to the action class method using the returned _Route_
+information, or handle errors:
 
 ```php
 use AutoRoute\Exception;
 
-try {
-    $route = $router->route($request->method, $request->url[PHP_URL_PATH]);
-} catch (Exception\InvalidNamespace $e) {
-    // 400 Bad Request
-} catch (Exception\InvalidArgument $e) {
-    // 400 Bad Request
-} catch (Exception\NotFound $e) {
-    // 404 Not Found
-} catch (Exception\MethodNotAllowed $e) {
-    // 405 Method Not Allowed
-} catch (\Throwable) {
-    // 500 Server Error
+switch ($route->error) {
+    case null:
+        // no errors! create the action class instance
+        // ... and call it with the method and arguments.
+        $action = Factory::newInstance($route->class);
+        $method = $route->method;
+        $arguments = $route->arguments;
+        $response = $action->$method(...$arguments);
+        break;
+
+    case Exception\InvalidArgument::CLASS:
+        $response = /* 400 Bad Request */;
+        break;
+
+    case Exception\NotFound::CLASS:
+        $response = /* 404 Not Found */;
+        break;
+
+    case Exception\MethodNotAllowed::CLASS:
+        $response = /* 405 Not Allowed */;
+        /*
+        N.b.: Examine $route->headers to find the 'allowed' methods for the
+        resource, if any.
+        */
+        break;
+
+    default:
+        $response = /* 500 Server Error */;
+        break;
 }
 ```
 
-Finally, dispatch to the action class method using the returned _Route_
-information:
-
-```php
-// presuming a DI-based Factory that can create new action class instances:
-$action = Factory::newInstance($route->class);
-
-// call the action instance with the method and params,
-// presumably getting back an HTTP Response
-$response = call_user_func([$action, $route->method], ...$route->arguments);
-```
 
 ## Debugging
 
