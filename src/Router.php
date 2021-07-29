@@ -38,6 +38,11 @@ class Router
     ) {
     }
 
+    public function getLogger() : LoggerInterface
+    {
+        return $this->logger;
+    }
+
     public function route(string $verb, string $path) : Route
     {
         $this->log("{$verb} {$path}");
@@ -50,15 +55,7 @@ class Router
         try {
             $this->segments = $this->getSegments($path);
             $this->captureLoop();
-
-            $requiredCount = count($this->action->getRequiredParameters());
-            $argumentCount = count($this->arguments);
-
-            if ($argumentCount < $requiredCount) {
-                $this->log("not enough arguments: expected {$requiredCount}, actually {$argumentCount}");
-                throw new Exception\NotFound("{$this->class} needs {$requiredCount} argument(s), {$argumentCount} found");
-            }
-
+            $this->checkArgumentCount();
             return new Route(
                 $this->action->getClass(),
                 $this->config->method,
@@ -74,6 +71,22 @@ class Router
                 $this->headers
             );
         }
+    }
+
+    protected function checkArgumentCount() : void
+    {
+        $requiredCount = count($this->action->getRequiredParameters());
+        $argumentCount = count($this->arguments);
+
+        if ($argumentCount >= $requiredCount) {
+            return;
+        }
+
+        $message = "{$this->class} needs {$requiredCount} argument(s), "
+            . "{$argumentCount} found";
+
+        $this->log($message);
+        throw new Exception\NotFound($message);
     }
 
     protected function captureLoop() : void
@@ -313,11 +326,6 @@ class Router
         }
 
         return $segments;
-    }
-
-    public function getLogger() : LoggerInterface
-    {
-        return $this->logger;
     }
 
     protected function log(string $message) : void
