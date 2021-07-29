@@ -22,7 +22,7 @@ class Reflector
 
     protected array $constructorParameters = [];
 
-    public function __construct(protected string $method)
+    public function __construct(protected Config $config)
     {
     }
 
@@ -59,7 +59,7 @@ class Reflector
     {
         $this->actionParameters[$class] = [];
         $rclass = $this->getClass($class);
-        $rmethod = $rclass->getMethod($this->method);
+        $rmethod = $rclass->getMethod($this->config->method);
 
         if ($rmethod !== null) {
             $this->actionParameters[$class] = $rmethod->getParameters();

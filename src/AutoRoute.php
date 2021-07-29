@@ -32,6 +32,9 @@ class AutoRoute
 
     protected ?Router $router = null;
 
+    /**
+     * @todo should LoggerFactory be here?
+     */
     public function __construct(
         protected string $namespace,
         protected string $directory,
@@ -133,7 +136,7 @@ class AutoRoute
     public function getReflector() : Reflector
     {
         if ($this->reflector === null) {
-            $this->reflector = new Reflector($this->method);
+            $this->reflector = new Reflector($this->getConfig());
         }
 
         return $this->reflector;
