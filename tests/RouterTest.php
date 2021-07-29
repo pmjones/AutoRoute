@@ -190,6 +190,16 @@ class RouterTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testInvalidNamespace_notEnoughArguments()
+    {
+        $route = $this->router->route('GET', '/api/foo-item/');
+        $this->assertRouteError(
+            Exception\NotFound::CLASS,
+            "AutoRoute\Http\FooItem\GetFooItem needs 1 argument(s), 0 found",
+            $route
+        );
+    }
+
     public function testClassNotFound_emptyNamespace()
     {
         $route = $this->router->route('GET', '/api/admin/empty');

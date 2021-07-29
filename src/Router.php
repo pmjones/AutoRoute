@@ -51,6 +51,14 @@ class Router
             $this->segments = $this->getSegments($path);
             $this->captureLoop();
 
+            $requiredCount = count($this->action->getRequiredParameters());
+            $argumentCount = count($this->arguments);
+
+            if ($argumentCount < $requiredCount) {
+                $this->log("not enough arguments: expected {$requiredCount}, actually {$argumentCount}");
+                throw new Exception\NotFound("{$this->class} needs {$requiredCount} argument(s), {$argumentCount} found");
+            }
+
             return new Route(
                 $this->action->getClass(),
                 $this->config->method,
