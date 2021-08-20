@@ -78,7 +78,7 @@ class Dumper
     {
         $type = $this->reflector->getParameterType($rp);
 
-        if (! $this->reflector->classExists($type)) {
+        if (! class_exists($type)) {
             $name = $rp->getName();
             $vari = $rp->isVariadic() ? '...' : '';
             $dump = '/{' . $vari . $type . ':' . $name . '}';

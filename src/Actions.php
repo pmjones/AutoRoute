@@ -48,7 +48,7 @@ class Actions
             throw new Exception\InvalidNamespace("Expected namespace {$this->config->namespace}, actually {$class}");
         }
 
-        if (! $this->reflector->classExists($class)) {
+        if (! class_exists($class)) {
             throw new Exception\NotFound("Expected class {$class}, actually not found");
         }
 
@@ -111,7 +111,7 @@ class Actions
     {
         $class = $this->getClass($verb, $subNamespace, $tail);
 
-        if ($this->reflector->classExists($class)) {
+        if ($class !== null && class_exists($class)) {
             return $class;
         }
 
@@ -120,7 +120,7 @@ class Actions
         }
 
         $class = $this->getClass('Get', $subNamespace, $tail);
-        return $this->reflector->classExists($class) ? $class : null;
+        return $class !== null && class_exists($class) ? $class : null;
     }
 
     public function hasSubNamespace(string $subNamespace) : bool
@@ -136,7 +136,7 @@ class Actions
     public function getAllowed(string $subNamespace) : array
     {
         $verbs = [];
-        $class = $this->getClass('', $subNamespace);
+        $class = $this->getClass('', $subNamespace) ?? '';
         $parts = explode('\\', $class);
         $main = end($parts). '.php';
         $mainLen = -1 * strlen($main);

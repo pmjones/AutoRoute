@@ -49,7 +49,7 @@ class Router
         $this->verb = ucfirst(strtolower($verb));
         $this->subNamespace = '';
         $this->class = '';
-        $this->action = new NullAction();
+        $this->action = new Action('', [], []);
         $this->arguments = [];
 
         try {

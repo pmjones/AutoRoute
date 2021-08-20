@@ -69,7 +69,7 @@ class Reflector
     protected function getClass(string $class) : ReflectionClass
     {
         if (! class_exists($class)) {
-            throw new Exception\NotFound("No such class: {$class}");
+            throw new Exception\NotFound("Class not found: {$class}");
         }
 
         if (! isset($this->classes[$class])) {
@@ -77,11 +77,6 @@ class Reflector
         }
 
         return $this->classes[$class];
-    }
-
-    public function classExists(?string $class) : bool
-    {
-        return class_exists((string) $class);
     }
 
     public function getParameterType(ReflectionParameter $parameter) : string

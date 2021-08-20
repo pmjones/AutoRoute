@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace AutoRoute;
 
 use Psr\Log\AbstractLogger;
+use Stringable;
 
 class Logger extends AbstractLogger
 {
@@ -18,7 +19,7 @@ class Logger extends AbstractLogger
 
     public function log(
         $level,
-        string|\Stringable $message,
+        string|Stringable $message,
         array $context = [],
     ) : void
     {

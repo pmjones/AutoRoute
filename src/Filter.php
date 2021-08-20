@@ -22,7 +22,7 @@ class Filter
     {
         $type = $this->reflector->getParameterType($rp);
 
-        if ($this->reflector->classExists($type)) {
+        if (class_exists($type)) {
             return $this->toObject($rp, $type, $values);
         }
 
