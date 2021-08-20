@@ -224,6 +224,19 @@ class RouterTest extends \PHPUnit\Framework\TestCase
             ['allowed' => 'DELETE,GET,HEAD,PATCH,POST'],
             $route->headers
         );
+
+        $route = $this->router->route('PUT', '/api/foo-items');
+
+        $this->assertRouteError(
+            Exception\MethodNotAllowed::CLASS,
+            'PUT action not found in namespace AutoRoute\Http\FooItems',
+            $route
+        );
+
+        $this->assertSame(
+            ['allowed' => 'GET,HEAD'],
+            $route->headers
+        );
     }
 
     public function testTooManySegments()

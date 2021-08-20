@@ -82,15 +82,6 @@ class Reflector
     public function getParameterType(ReflectionParameter $parameter) : string
     {
         $type = $parameter->getType();
-
-        if ($type === null) {
-            return 'mixed';
-        }
-
-        if ($type instanceof ReflectionNamedType) {
-            return $type->getName();
-        }
-
-        return (string) $type;
+        return $type === null ? 'mixed' : $type->getName();
     }
 }

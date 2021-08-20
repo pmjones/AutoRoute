@@ -142,19 +142,12 @@ class Filter
     {
         $pos = $rp->getPosition();
         $name = $rp->getName();
-        $class = $rp->getDeclaringClass();
-
-        if ($class !== null) {
-            $class = $class->getName() . '::';
-        } else {
-            $class = '';
-        }
-
+        $class = $rp->getDeclaringClass()->getName();
         $method = $rp->getDeclaringFunction()->getName();
         $value = var_export($value, true);
         return new Exception\InvalidArgument(
             "Expected {$type} argument "
-            . "for {$class}{$method}() "
+            . "for {$class}::{$method}() "
             . "parameter {$pos} (\$$name), "
             . "actually $value"
         );
