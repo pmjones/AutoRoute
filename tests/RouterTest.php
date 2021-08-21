@@ -43,6 +43,11 @@ class RouterTest extends \PHPUnit\Framework\TestCase
         $this->router = $autoRoute->getRouter();
     }
 
+    public function testGetLogger()
+    {
+        $this->assertInstanceOf(Logger::CLASS, $this->router->getLogger());
+    }
+
     public function testDeepPaths()
     {
         $route = $this->router->route('GET', '/api/repo/pmjones/auto-route');
