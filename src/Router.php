@@ -53,9 +53,7 @@ class Router
         $this->arguments = [];
 
         try {
-            $this->segments = $this->getSegments($path);
-            $this->captureLoop();
-            $this->checkArgumentCount();
+            $this->capture($path);
             return new Route(
                 $this->action->getClass(),
                 $this->config->method,
@@ -73,8 +71,16 @@ class Router
         }
     }
 
-    protected function checkArgumentCount() : void
+    protected function capture(string $path) : void
     {
+        $this->segments = $this->getSegments($path);
+
+        do {
+            $this->captureNextSegment();
+        } while (! empty($this->segments));
+
+        $this->log('segments empty, capture complete');
+
         $requiredCount = count($this->action->getRequiredParameters());
         $argumentCount = count($this->arguments);
 
@@ -89,32 +95,9 @@ class Router
         throw new Exception\NotFound($message);
     }
 
-    protected function captureLoop() : void
+    protected function captureNextSegment() : void
     {
-        do {
-            $this->capture();
-        } while (! empty($this->segments));
-
-        $this->log("segments empty");
-    }
-
-    protected function capture() : void
-    {
-        $this->captureSubNamespace();
-        $this->captureMainClass();
-        $this->captureTailClass();
-        $this->captureRequiredArguments();
-
-        if ($this->nextSegmentIsNamespace()) {
-            return;
-        }
-
-        $this->captureOptionalArguments();
-    }
-
-    protected function captureSubNamespace() : void
-    {
-        // consume next segment as a subnamespace
+        // capture next segment as a subnamespace
         if (! empty($this->segments)) {
             $segment = $this->segmentToNamespace(array_shift($this->segments));
             $this->log("candidate namespace segment: {$segment}");
@@ -127,35 +110,12 @@ class Router
         if (! $this->actions->hasSubNamespace($this->subNamespace)) {
             // no, so no need to keep matching
             $ns = rtrim($this->config->namespace, '\\') . $this->subNamespace;
-            $this->log("subnamespace not found");
-            throw new Exception\NotFound("Not a known namespace: $ns");
+            $this->log('subnamespace not found');
+            throw new Exception\NotFound("Not a known namespace: {$ns}");
         }
 
-        $this->log("subnamespace found");
-    }
-
-    protected function classNotFound() : void
-    {
-        $this->log("class not found");
-
-        if (! empty($this->segments)) {
-            // recursively capture next segment
-            $this->capture();
-            return;
-        }
-
-        // no class, and no more segments
-        $this->log("segments empty");
-        $ns = rtrim($this->config->namespace, '\\') . $this->subNamespace;
-        $allowed = $this->actions->getAllowed($this->subNamespace);
-
-        if (empty($allowed)) {
-            throw new Exception\NotFound("No actions found in namespace {$ns}");
-        }
-
-        $verb = strtoupper($this->verb);
-        $this->headers = ['allowed' => implode(',', $allowed)];
-        throw new Exception\MethodNotAllowed("$verb action not found in namespace $ns");
+        $this->log('subnamespace found');
+        $this->captureMainClass();
     }
 
     protected function captureMainClass() : void
@@ -169,30 +129,54 @@ class Router
             return;
         }
 
-        $this->log("class found");
+        $this->log('class found');
         $this->class = $class;
         $this->action = $this->actions->getAction($this->class);
+
+        if (count($this->segments) === 1) {
+            $this->captureTailClass();
+        }
+
+        $this->captureRequiredArguments();
+        $this->captureOptionalArguments();
+    }
+
+    protected function classNotFound() : void
+    {
+        $this->log('class not found');
+
+        if (! empty($this->segments)) {
+            return;
+        }
+
+        // no class, and no more segments
+        $this->log('segments empty too soon');
+        $ns = rtrim($this->config->namespace, '\\') . $this->subNamespace;
+        $allowed = $this->actions->getAllowed($this->subNamespace);
+
+        if (empty($allowed)) {
+            throw new Exception\NotFound("No actions found in namespace {$ns}");
+        }
+
+        $verb = strtoupper($this->verb);
+        $this->headers = ['allowed' => implode(',', $allowed)];
+        throw new Exception\MethodNotAllowed("{$verb} action not found in namespace {$ns}");
     }
 
     protected function captureTailClass() : void
     {
-        // there can be only one segment remaining
-        if (count($this->segments) !== 1) {
-            return;
-        }
-
         $segment = $this->segmentToNamespace($this->segments[0]);
         $this->log("candidate static tail namepace segment: {$segment}");
         $tailClass = $this->actions->hasAction($this->verb, $this->subNamespace, $segment);
 
         if ($tailClass === null) {
-            $this->log("static tail subnamespace not found");
+            $this->log('static tail subnamespace not found');
             return;
         }
 
+        $this->log("static tail class found: {$tailClass}");
         array_shift($this->segments);
         $this->subNamespace .= '\\' . $segment;
-        $this->log("static tail class found: {$tailClass}");
         $this->class = $tailClass;
         $this->action = $this->actions->getAction($this->class);
     }
@@ -215,25 +199,17 @@ class Router
         $this->captureArguments($requiredParameters);
     }
 
-    protected function nextSegmentIsNamespace() : bool
+    protected function captureOptionalArguments() : void
     {
         if (empty($this->segments)) {
-            return false;
+            return;
         }
 
         $segment = $this->segmentToNamespace($this->segments[0]);
         $temp = $this->subNamespace . '\\' . $segment;
 
         if ($this->actions->hasSubNamespace($temp)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    protected function captureOptionalArguments() : void
-    {
-        if (empty($this->segments)) {
+            $this->log('next segment is a namespace');
             return;
         }
 
@@ -251,17 +227,13 @@ class Router
             return;
         }
 
-        $this->log("leftover segments");
+        $this->log('leftover segments');
         $class = $this->action->getClass();
         throw new Exception\NotFound("Too many router segments for {$class}");
     }
 
     protected function captureArguments(array $parameters) : void
     {
-        if (empty($this->segments)) {
-            return;
-        }
-
         foreach ($parameters as $i => $parameter) {
             $this->captureArgument($parameter, $i);
         }
@@ -298,7 +270,7 @@ class Router
         $segment = trim($segment);
 
         if ($segment === '') {
-            throw new Exception\NotFound("Cannot convert empty segment to namespace part");
+            throw new Exception\NotFound('Cannot convert empty segment to namespace part');
         }
 
         return str_replace(

@@ -39,10 +39,17 @@ class Reverser
 
     public function reverse(string $class) : Reverse
     {
-        $this->parts = explode('\\', substr($class, $this->config->namespaceLen));
+        $this->parts = explode(
+            '\\',
+            substr($class, $this->config->namespaceLen)
+        );
         $last = array_pop($this->parts);
         $impl = implode('', $this->parts);
-        $this->verb = substr($last, 0, strlen($last) - strlen($impl) - $this->config->suffixLen);
+        $this->verb = substr(
+            $last,
+            0,
+            strlen($last) - strlen($impl) - $this->config->suffixLen
+        );
         $this->path = $this->config->baseUrl;
         $this->requiredParametersTotal = 0;
         $this->subNamespace = '';
@@ -54,7 +61,8 @@ class Reverser
         }
 
         $action = $this->actions->getAction($class);
-        $parameters = $action->getRequiredParameters() + $action->getOptionalParameters();
+        $parameters = $action->getRequiredParameters()
+            + $action->getOptionalParameters();
 
         return new Reverse(
             $class,
@@ -97,16 +105,22 @@ class Reverser
         $prevRequired = 0;
 
         if ($this->prevClass !== '') {
-            $prevRequired = count($this->actions->getAction($this->prevClass)->getRequiredParameters());
+            $prevRequired = count($this->actions
+                ->getAction($this->prevClass)
+                ->getRequiredParameters()
+            );
         }
 
-        $nextClass = $this->actions->hasAction($this->verb, $this->subNamespace, $this->parts[0]);
+        $nextClass = $this->actions->hasAction(
+            $this->verb,
+            $this->subNamespace,
+            $this->parts[0]
+        );
 
-        if ($nextClass === null) {
-            return false;
-        }
-
-        $nextRequired = count($this->actions->getAction($nextClass)->getRequiredParameters());
+        $nextRequired = count($this->actions
+            ->getAction($nextClass)
+            ->getRequiredParameters()
+        );
 
         if ($prevRequired !== $nextRequired) {
             return false;
@@ -119,7 +133,8 @@ class Reverser
 
     protected function reverseRequiredSegments(Action $action) : void
     {
-        $count = count($action->getRequiredParameters()) - $this->requiredParametersTotal;
+        $count = count($action->getRequiredParameters())
+            - $this->requiredParametersTotal;
 
         while ($count > 0) {
             $this->path .= '/{' . $this->requiredParametersTotal . '}';
