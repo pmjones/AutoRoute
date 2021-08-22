@@ -111,7 +111,7 @@ class Reverser
             );
         }
 
-        $nextClass = $this->actions->hasAction(
+        $nextClass = (string) $this->actions->hasAction(
             $this->verb,
             $this->subNamespace,
             $this->parts[0]
