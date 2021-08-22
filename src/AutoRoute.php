@@ -32,9 +32,6 @@ class AutoRoute
 
     protected ?Router $router = null;
 
-    /**
-     * @todo should LoggerFactory be here?
-     */
     public function __construct(
         protected string $namespace,
         protected string $directory,
