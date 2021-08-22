@@ -45,11 +45,15 @@ class Actions
         $ns = substr($class, 0, $this->config->namespaceLen);
 
         if ($ns !== $this->config->namespace) {
-            throw new Exception\InvalidNamespace("Expected namespace {$this->config->namespace}, actually {$class}");
+            throw new Exception\InvalidNamespace(
+                "Expected namespace {$this->config->namespace}, actually {$class}"
+            );
         }
 
         if (! class_exists($class)) {
-            throw new Exception\NotFound("Expected class {$class}, actually not found");
+            throw new Exception\NotFound(
+                "Expected class {$class}, actually not found"
+            );
         }
 
         $parameters = $this->reflector->getActionParameters($class);
@@ -99,7 +103,9 @@ class Actions
             $base .= $tail . '\\';
         }
 
-        $ending = str_replace('\\', '', $subNamespace . $tail) . $this->config->suffix;
+        $ending = str_replace('\\', '', $subNamespace . $tail)
+            . $this->config->suffix;
+
         return $base . $verb . $ending;
     }
 
@@ -126,10 +132,14 @@ class Actions
     public function hasSubNamespace(string $subNamespace) : bool
     {
         if (strpos($subNamespace, '..') !== false) {
-            throw new Exception\NotFound("Directory dots not allowed in segments");
+            throw new Exception\NotFound(
+                "Directory dots not allowed in segments"
+            );
         }
 
-        $dir = $this->config->directory . str_replace('\\', DIRECTORY_SEPARATOR, $subNamespace);
+        $dir = $this->config->directory
+            . str_replace('\\', DIRECTORY_SEPARATOR, $subNamespace);
+
         return is_dir($dir);
     }
 
@@ -140,7 +150,8 @@ class Actions
         $parts = explode('\\', $class);
         $main = end($parts). '.php';
         $mainLen = -1 * strlen($main);
-        $dir = $this->config->directory . str_replace('\\', DIRECTORY_SEPARATOR, $subNamespace);
+        $dir = $this->config->directory
+            . str_replace('\\', DIRECTORY_SEPARATOR, $subNamespace);
         $items = new DirectoryIterator($dir);
 
         foreach ($items as $item) {
@@ -193,11 +204,19 @@ class Actions
 
     protected function fileToClass(string $file) : ?string
     {
-        $file = str_replace($this->config->directory . DIRECTORY_SEPARATOR, '', substr($file, 0, -4));
+        $file = str_replace(
+            $this->config->directory . DIRECTORY_SEPARATOR,
+            '',
+            substr($file, 0, -4)
+        );
         $parts = explode(DIRECTORY_SEPARATOR, $file);
         $last = array_pop($parts);
         $core = implode('', $parts);
-        $verb = substr($last, 0, strlen($last) - strlen($core) - $this->config->suffixLen);
+        $verb = substr(
+            $last,
+            0,
+            strlen($last) - strlen($core) - $this->config->suffixLen
+        );
 
         if ($verb === '') {
             return null;

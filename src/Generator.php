@@ -52,14 +52,19 @@ class Generator
         }
 
         if (! empty($values)) {
-            throw new Exception\NotFound("Too many arguments provided for {$class}");
+            throw new Exception\NotFound(
+                "Too many arguments provided for {$class}"
+            );
         }
 
         $path = strtr($path, $pairs);
         return '/' . trim($path, '/');
     }
 
-    protected function segments(ReflectionParameter $rp, array &$values) : string
+    protected function segments(
+        ReflectionParameter $rp,
+        array &$values
+    ) : string
     {
         if (empty($values) && $rp->isOptional()) {
             return '';

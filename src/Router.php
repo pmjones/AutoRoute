@@ -160,14 +160,20 @@ class Router
 
         $verb = strtoupper($this->verb);
         $this->headers = ['allowed' => implode(',', $allowed)];
-        throw new Exception\MethodNotAllowed("{$verb} action not found in namespace {$ns}");
+        throw new Exception\MethodNotAllowed(
+            "{$verb} action not found in namespace {$ns}"
+        );
     }
 
     protected function captureTailClass() : void
     {
         $segment = $this->segmentToNamespace($this->segments[0]);
         $this->log("candidate static tail namepace segment: {$segment}");
-        $tailClass = $this->actions->hasAction($this->verb, $this->subNamespace, $segment);
+        $tailClass = $this->actions->hasAction(
+            $this->verb,
+            $this->subNamespace,
+            $segment
+        );
 
         if ($tailClass === null) {
             $this->log('static tail subnamespace not found');
@@ -239,7 +245,10 @@ class Router
         }
     }
 
-    protected function captureArgument(ReflectionParameter $parameter, int $i) : void
+    protected function captureArgument(
+        ReflectionParameter $parameter,
+        int $i
+    ) : void
     {
         if (empty($this->segments)) {
             return;
@@ -250,17 +259,26 @@ class Router
             return;
         }
 
-        $this->arguments[] = $this->filter->parameter($parameter, $this->segments);
+        $this->arguments[] = $this->filter->parameter(
+            $parameter,
+            $this->segments
+        );
         $name = $parameter->getName();
         $this->log("captured argument {$i} (\${$name})");
     }
 
-    protected function captureVariadic(ReflectionParameter $parameter, int $i) : void
+    protected function captureVariadic(
+        ReflectionParameter $parameter,
+        int $i
+    ) : void
     {
         $name = $parameter->getName();
 
         while (! empty($this->segments)) {
-            $this->arguments[] = $this->filter->parameter($parameter, $this->segments);
+            $this->arguments[] = $this->filter->parameter(
+                $parameter,
+                $this->segments
+            );
             $this->log("captured variadic argument {$i} (\${$name})");
         }
     }
@@ -270,7 +288,9 @@ class Router
         $segment = trim($segment);
 
         if ($segment === '') {
-            throw new Exception\NotFound('Cannot convert empty segment to namespace part');
+            throw new Exception\NotFound(
+                'Cannot convert empty segment to namespace part'
+            );
         }
 
         return str_replace(
@@ -286,7 +306,9 @@ class Router
         $base = substr($path, 0, $this->config->baseUrlLen);
 
         if ($base !== $this->config->baseUrl) {
-            throw new Exception\NotFound("Expected base URL /{$this->config->baseUrl}, actually /{$base}");
+            throw new Exception\NotFound(
+                "Expected base URL /{$this->config->baseUrl}, actually /{$base}"
+            );
         }
 
         $segments = [];
