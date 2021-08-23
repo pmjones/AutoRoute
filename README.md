@@ -1,31 +1,37 @@
 # AutoRoute
 
 AutoRoute automatically maps incoming HTTP requests (by verb and path) to PHP
-action classes in a specified namespace, reflecting on a specified action method
-within that class to determine the dynamic URL parameters. In addition, it lets
-you generate URL paths based on action class names, and checks the dynamic
-segment typehints for you automatically.
+action classes in a specified namespace, reflecting on a specified action
+method within that class to determine the dynamic URL argument values. Those
+parameters may be typical scalar values (int, float, string, bool), or arrays,
+or even [value objects](#value-objects-as-action-parameters) of your own
+creation. AutoRoute also helps you generate URL paths based on action class
+names, and checks the dynamic argument typehints for you automatically.
 
 AutoRoute is low-maintenance. Merely adding a class to your source code, in the
 recognized namespace and with the recognized action method name, automatically
 makes it available as a route. No more managing a routes file to keep it in
 sync with your action classes!
 
-AutoRoute is fast. In fact, it is [faster than FastRoute][benchmark] in common
-cases -- even when FastRoute is using cached route definitions.
+AutoRoute is fast. In fact, it is [roughly 2x faster than FastRoute]
+[benchmark] in common cases -- even when FastRoute is using cached route
+definitions.
 
   [benchmark]: https://github.com/pmjones/AutoRoute-benchmark
 
 > **Note:**
 >
 > When comparing alternatives, please consider AutoRoute as being in the same
-> category as [AltoRouter](https://github.com/dannyvankooten/AltoRouter),
+> category as
+> [AltoRouter](https://github.com/dannyvankooten/AltoRouter),
 > [FastRoute](https://github.com/nikic/FastRoute),
-> [Klein](https://github.com/klein/klein.php), etc.,
-> and not of [Aura](https://github.com/auraphp/Aura.Router),
+> [Klein](https://github.com/klein/klein.php),
+> etc., and not of
+> [Aura](https://github.com/auraphp/Aura.Router),
+> [Laminas](https://github.com/laminas/laminas-router),
 > [Laravel](https://github.com/illuminate/routing),
 > [Symfony](https://github.com/symfony/Routing),
-> [Zend](https://github.com/zendframework/zend-router), etc.
+> etc.
 
 **Contents**
 
