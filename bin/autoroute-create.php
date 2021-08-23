@@ -11,9 +11,15 @@ if ($namespace === null) {
     exit(1);
 }
 
-$directory = realpath($argv[$optind + 1] ?? null);
-if ($directory === false) {
+$directory = $argv[$optind + 1] ?? null;
+if ($directory === null) {
     echo "Please pass the PHP namespace directory path as the second argument." . PHP_EOL;
+    exit(1);
+}
+
+$realpath = realpath($directory);
+if ($realpath === false) {
+    echo "Directory {$directory} not found." . PHP_EOL;
     exit(1);
 }
 
@@ -39,7 +45,7 @@ if (! file_exists($template)) {
 
 $autoRoute = new AutoRoute(
     namespace: $namespace,
-    directory: $directory,
+    directory: $realpath,
     method: $options['method'] ?? '__invoke',
     suffix: $options['suffix'] ?? '',
     wordSeparator: $options['word-separator'] ?? '-',
