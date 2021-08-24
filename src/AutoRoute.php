@@ -26,6 +26,8 @@ class AutoRoute
 
     protected ?Generator $generator = null;
 
+    protected mixed /* callable */ $loggerFactory = null;
+
     protected ?Logger $logger = null;
 
     protected ?Reflector $reflector = null;
@@ -33,20 +35,32 @@ class AutoRoute
     protected ?Router $router = null;
 
     public function __construct(
-        protected string $namespace,
-        protected string $directory,
-        protected string $baseUrl = '/',
-        protected int $ignoreParams = 0,
-        protected string $method = '__invoke',
-        protected string $suffix = '',
-        protected string $wordSeparator = '-',
-        protected mixed /* callable */ $loggerFactory = null,
+        string $namespace,
+        string $directory,
+        string $baseUrl = '/',
+        int $ignoreParams = 0,
+        string $method = '__invoke',
+        string $suffix = '',
+        string $wordSeparator = '-',
+        mixed /* callable */ $loggerFactory = null,
     ) {
-        if ($this->loggerFactory === null) {
-            $this->loggerFactory = function () : LoggerInterface {
+        $this->config = new Config(
+            $namespace,
+            $directory,
+            $baseUrl,
+            $ignoreParams,
+            $method,
+            $suffix,
+            $wordSeparator,
+        );
+
+        if ($loggerFactory === null) {
+            $loggerFactory = function () : LoggerInterface {
                 return new Logger();
             };
         }
+
+        $this->loggerFactory = $loggerFactory;
     }
 
     public function getActions() : Actions
@@ -63,18 +77,6 @@ class AutoRoute
 
     public function getConfig() : Config
     {
-        if ($this->config === null) {
-            $this->config = new Config(
-                $this->namespace,
-                $this->directory,
-                $this->baseUrl,
-                $this->ignoreParams,
-                $this->method,
-                $this->suffix,
-                $this->wordSeparator,
-            );
-        }
-
         return $this->config;
     }
 
