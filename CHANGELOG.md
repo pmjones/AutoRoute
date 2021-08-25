@@ -12,8 +12,8 @@ In 1.x, the _AutoRoute_ options were configured with setters ...
 
 ```php
 $autoRoute = new AutoRoute(
-    'App\Http',
-    dirname(__DIR__) . '/src/App/Http/'
+    'Project\Http',
+    dirname(__DIR__) . '/src/Project/Http/'
 );
 
 $autoRoute->setBaseUrl('/api');
@@ -26,8 +26,8 @@ $autoRoute->setWordSeparator('_');
 
 ```php
 $autoRoute = new AutoRoute(
-    namespace: 'App\Http',
-    directory: dirname(__DIR__) . '/src/App/Http/',
+    namespace: 'Project\Http',
+    directory: dirname(__DIR__) . '/src/Project/Http/',
     baseUrl: '/api',
     ignoreParams: 1,
     method: 'exec',
