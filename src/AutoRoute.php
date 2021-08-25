@@ -16,7 +16,7 @@ class AutoRoute
 {
     protected ?Actions $actions = null;
 
-    protected ?Config $config = null;
+    protected Config $config;
 
     protected ?Creator $creator = null;
 
