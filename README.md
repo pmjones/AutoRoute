@@ -876,8 +876,8 @@ class Year extends ValueObject
 }
 ```
 
-It is up to you to catch these exceptions and send the appropriate HTTP
-response.
+It is up to you to examine `Route::$error` for these exceptions and send the
+appropriate HTTP response.
 
 Some additional notes:
 
