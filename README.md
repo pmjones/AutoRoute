@@ -72,22 +72,22 @@ relatively maintenance-free.
 
 ## Examples
 
-Given a base namespace of `App\Http` and a base url of `/`, this request ...
+Given a base namespace of `Project\Http` and a base url of `/`, this request ...
 
     GET /photos
 
-... auto-routes to the class `App\Http\Photos\GetPhotos`.
+... auto-routes to the class `Project\Http\Photos\GetPhotos`.
 
 Likewise, this request ...
 
     POST /photo
 
-... auto-routes to the class `App\Http\Photo\PostPhoto`.
+... auto-routes to the class `Project\Http\Photo\PostPhoto`.
 
 Given an action class with method parameters, such as this ...
 
 ```php
-namespace App\Http\Photo;
+namespace Project\Http\Photo;
 
 class GetPhoto
 {
@@ -111,7 +111,7 @@ parent or grandparent class, it will route to that class name. For example,
 given an action class with method parameters such as this ...
 
 ```php
-namespace App\Http\Photo\Edit;
+namespace Project\Http\Photo\Edit;
 
 class GetPhotoEdit // parent: GetPhoto
 {
@@ -130,13 +130,13 @@ Finally, a request for the root URL ...
 
     GET /
 
-... auto-routes to the class `App\Http\Get`.
+... auto-routes to the class `Project\Http\Get`.
 
 > **Tip:**
 >
-> Any HEAD request will auto-route to an explicit `App\Http\...\Head*` class,
+> Any HEAD request will auto-route to an explicit `Project\Http\...\Head*` class,
 > if one exists. If an explicit `Head` class does not exist, the request will
-> implicitly be auto-routed to the matching `App\Http\...\Get*` class, if one
+> implicitly be auto-routed to the matching `Project\Http\...\Get*` class, if one
 > exists.
 
 ## How It Works
@@ -152,18 +152,18 @@ further:
 
 3. Ending in `.php`.
 
-Thus, given a base namespace of `App\Http`, the class `App\Http\Photo\PostPhoto`
+Thus, given a base namespace of `Project\Http`, the class `Project\Http\Photo\PostPhoto`
 will be the action for `POST /photo[/*]`.
 
-Likewise, `App\Http\Photos\GetPhotos` will be the action class for `GET /photos[/*]`.
+Likewise, `Project\Http\Photos\GetPhotos` will be the action class for `GET /photos[/*]`.
 
-And `App\Http\Photo\Edit\GetPhotoEdit` will be the action class for `GET /photo[/*]/edit`.
+And `Project\Http\Photo\Edit\GetPhotoEdit` will be the action class for `GET /photo[/*]/edit`.
 
-An explicit `App\Http\Photos\HeadPhotos` will be the action class for
+An explicit `Project\Http\Photos\HeadPhotos` will be the action class for
 `HEAD /photos[/*]`. If the `HeadPhotos` class does not exist, the action class
-is inferred to be `App\Http\Photos\HeadPhotos` instead.
+is inferred to be `Project\Http\Photos\HeadPhotos` instead.
 
-Finally, at the URL root path, `App\Http\Get` will be the action class for `GET /`.
+Finally, at the URL root path, `Project\Http\Get` will be the action class for `GET /`.
 
 ### Dynamic Parameters
 
@@ -171,7 +171,7 @@ The action method parameter typehints are honored by the _Router_. For example,
 the following action ...
 
 ```php
-namespace App\Http\Photos\Archive;
+namespace Project\Http\Photos\Archive;
 
 class GetPhotosArchive
 {
@@ -212,7 +212,7 @@ Finally, trailing variadic parameters are also honored by the _Router_. Given an
 action method like the following ...
 
 ```php
-namespace App\Http\Photos\ByTag;
+namespace Project\Http\Photos\ByTag;
 
 class GetPhotosByTag
 {
@@ -272,8 +272,8 @@ namespace and the directory path to classes in that namespace:
 use AutoRoute\AutoRoute;
 
 $autoRoute = new AutoRoute(
-    'App\Http',
-    dirname(__DIR__) . '/src/App/Http/'
+    'Project\Http',
+    dirname(__DIR__) . '/src/Project/Http/'
 );
 ```
 
@@ -283,8 +283,8 @@ You may use named constructor parameters if you wish:
 use AutoRoute\AutoRoute;
 
 $autoRoute = new AutoRoute(
-    namespace: 'App\Http',
-    directory: dirname(__DIR__) . '/src/App/Http/',
+    namespace: 'Project\Http',
+    directory: dirname(__DIR__) . '/src/Project/Http/',
 );
 ```
 
@@ -363,8 +363,8 @@ Then call the `generate()` method with the action class name, along with any
 action method parameters as variadic arguments:
 
 ```php
-use App\Http\Photo\Edit\GetPhotoEdit;
-use App\Http\Photos\ByTag\GetPhotosByTag;
+use Project\Http\Photo\Edit\GetPhotoEdit;
+use Project\Http\Photos\ByTag\GetPhotosByTag;
 
 $path = $generator->generate(GetPhotoEdit::CLASS, 1);
 // /photo/1/edit
@@ -418,7 +418,7 @@ AutoRoute will see that parameter and incorrectly interpret it as a dynamic
 segment; for example:
 
 ```php
-namespace App\Http\Photo;
+namespace Project\Http\Photo;
 
 use SapiRequest;
 
@@ -530,30 +530,30 @@ using the `bin/autoroute-dump.php` command line tool. Pass the base HTTP action
 namespace, and the directory where the action classes are stored:
 
 ```
-$ php bin/autoroute-dump.php App\\Http ./src/Http
+$ php bin/autoroute-dump.php Project\\Http ./src/Http
 ```
 
 The output will look something like this:
 
 ```
 GET     /
-        App\Http\Get
+        Project\Http\Get
 POST    /photo
-        App\Http\Photo\PostPhoto
+        Project\Http\Photo\PostPhoto
 GET     /photo/add
-        App\Http\Photo\Add\GetPhotoAdd
+        Project\Http\Photo\Add\GetPhotoAdd
 DELETE  /photo/{int:id}
-        App\Http\Photo\DeletePhoto
+        Project\Http\Photo\DeletePhoto
 GET     /photo/{int:id}
-        App\Http\Photo\GetPhoto
+        Project\Http\Photo\GetPhoto
 PATCH   /photo/{int:id}
-        App\Http\Photo\PatchPhoto
+        Project\Http\Photo\PatchPhoto
 GET     /photo/{int:id}/edit
-        App\Http\Photo\Edit\GetPhotoEdit
+        Project\Http\Photo\Edit\GetPhotoEdit
 GET     /photos/archive[/{int:year}][/{int:month}][/{int:day}]
-        App\Http\Photos\Archive\GetPhotosArchive
+        Project\Http\Photos\Archive\GetPhotosArchive
 GET     /photos[/{int:page}]
-        App\Http\Photos\GetPhotos
+        Project\Http\Photos\GetPhotos
 ```
 
 You can specify alternative configurations with these command line options:
@@ -577,13 +577,13 @@ placeholders.
 For example, the following command ...
 
 ```
-$ php bin/autoroute-create.php App\\Http ./src/Http GET /photo/{photoId}
+$ php bin/autoroute-create.php Project\\Http ./src/Http GET /photo/{photoId}
 ```
 
 ... will create this class file at `./src/Http/Photo/GetPhoto.php`:
 
 ```php
-namespace App\Http\Photo;
+namespace Project\Http\Photo;
 
 class GetPhoto
 {
@@ -652,7 +652,7 @@ further child resource actions beneath it will be terminated.
 
 ```php
 /* GET /company/{companyId} # get an existing company */
-namespace App\Http\Company;
+namespace Project\Http\Company;
 
 class GetCompany // no parent resource
 {
@@ -681,7 +681,7 @@ class PatchCompany // no parent resource
 }
 
 /* GET /company/{companyId}/employee/{employeeNum} # get an existing company employee */
-namespace App\Http\Company\Employee;
+namespace Project\Http\Company\Employee;
 
 class GetCompanyEmployee // parent resource: GetCompany
 {
@@ -692,7 +692,7 @@ class GetCompanyEmployee // parent resource: GetCompany
 }
 
 /* POST /company/{companyId}/employee # add a new company employee */
-namespace App\Http\Company\Employee;
+namespace Project\Http\Company\Employee;
 
 class PostCompanyEmployee // parent resource: PostCompany
 {
@@ -703,7 +703,7 @@ class PostCompanyEmployee // parent resource: PostCompany
 }
 
 /* PATCH /company/{companyId}/employee/{employeeNum} # edit an existing company employee */
-namespace App\Http\Company\Employee;
+namespace Project\Http\Company\Employee;
 
 class PatchCompanyEmployee // parent resource: PatchCompany
 {
@@ -728,7 +728,7 @@ exception if the value cannot be typecast correctly.
 For example, in the action:
 
 ```php
-namespace App\Http\Photos\Archive;
+namespace Project\Http\Photos\Archive;
 
 use SapiResponse;
 
@@ -749,7 +749,7 @@ class GetPhotosArchive
 Then, in the domain:
 
 ```php
-namespace App\Domain;
+namespace Project\Domain;
 
 class PhotoService
 {
@@ -799,7 +799,7 @@ For example, your underlying Application Service classes might need Domain
 value objects as inputs, with the action creating those value objects itself:
 
 ```php
-namespace App\Http\Company;
+namespace Project\Http\Company;
 
 use Domain\Company\CompanyId;
 
@@ -836,7 +836,7 @@ To avoid the manual conversion of dynamic path segments to value objects, you
 may use the value object type itself as an action parameter, like so:
 
 ```php
-namespace App\Http\Company;
+namespace Project\Http\Company;
 
 use Domain\Company\CompanyId;
 
@@ -932,7 +932,7 @@ A: Read them from your Request object.
 For example, in the action:
 
 ```php
-namespace App\Http\Foos;
+namespace Project\Http\Foos;
 
 use SapiRequest;
 
@@ -961,7 +961,7 @@ class GetFoos
 Then, in the domain:
 
 ```php
-namespace App\Domain;
+namespace Project\Domain;
 
 class FooService
 {
