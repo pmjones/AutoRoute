@@ -870,7 +870,7 @@ class Year extends ValueObject
     public function __construct(protected int $year)
     {
         if ($this->year < 0 || $this->year > 9999) {
-            throw new InvalidValue("The year must be between 0000 and 9999").
+            throw new InvalidValue("The year must be between 0000 and 9999.");
         }
     }
 }
