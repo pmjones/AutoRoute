@@ -13,6 +13,7 @@ use AutoRoute\Http\FooItem\Variadic\GetFooItemVariadic;
 use AutoRoute\Http\FooItems\Archive\GetFooItemsArchive;
 use AutoRoute\Http\FooItems\GetFooItems;
 use AutoRoute\Http\Get;
+use AutoRoute\Http\Fake;
 use AutoRoute\Http\Repo\GetRepo;
 use AutoRoute\Http\Repo\Issue\Comment\Add\GetRepoIssueCommentAdd;
 use AutoRoute\Http\Repo\Issue\Comment\GetRepoIssueComment;

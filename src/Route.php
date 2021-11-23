@@ -19,6 +19,7 @@ use Throwable;
  * @property-read ?string $error
  * @property-read ?Throwable $exception
  * @property-read array $headers
+ * @property-read array $messages
  */
 class Route
 {
@@ -29,11 +30,17 @@ class Route
         protected ?string $error = null,
         protected ?Throwable $exception = null,
         protected array $headers = [],
+        protected array $messages = [],
     ) {
     }
 
     public function __get(string $key) : mixed
     {
         return $this->$key;
+    }
+
+    public function asArray() : array
+    {
+        return get_object_vars($this);
     }
 }

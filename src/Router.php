@@ -60,13 +60,17 @@ class Router
                 $this->arguments
             );
         } catch (Throwable $e) {
+            $messages = ($this->logger instanceof Logger)
+                ? $this->logger->getMessages()
+                : [];
             return new Route(
                 $this->class,
                 $this->config->method,
                 $this->arguments,
                 get_class($e),
                 $e,
-                $this->headers
+                $this->headers,
+                $messages,
             );
         }
     }
