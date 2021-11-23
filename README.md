@@ -8,14 +8,19 @@ or even [value objects](#value-objects-as-action-parameters) of your own
 creation. AutoRoute also helps you generate URL paths based on action class
 names, and checks the dynamic argument typehints for you automatically.
 
+Install AutoRoute using Composer:
+
+```
+composer require pmjones/auto-route ^2.0
+```
+
 AutoRoute is low-maintenance. Merely adding a class to your source code, in the
 recognized namespace and with the recognized action method name, automatically
 makes it available as a route. No more managing a routes file to keep it in
 sync with your action classes!
 
-AutoRoute is fast. In fact, it is [roughly 2x faster than FastRoute]
-[benchmark] in common cases -- even when FastRoute is using cached route
-definitions.
+AutoRoute is fast. In fact, it is [roughly 2x faster than FastRoute][benchmark]
+in common cases -- even when FastRoute is using cached route definitions.
 
   [benchmark]: https://github.com/pmjones/AutoRoute-benchmark
 
