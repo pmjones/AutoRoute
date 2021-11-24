@@ -35,6 +35,14 @@ class Dumper
         foreach ($classes as $class) {
             $reverse = $this->actions->getReverse($class);
             $path = $this->namedPath($reverse);
+
+            // hack to fix optional catchall param when no base url
+            if (substr($path, 0, 4) === '/[/{') {
+                $path = '/[{' . substr($path, 4);
+            } elseif (substr($path, 0, 3) === '//{') {
+                $path = '/{' . substr($path, 3);
+            }
+
             $urls[$path][$reverse->verb] = $class;
 
             if ($reverse->verb === 'Get' && ! isset($urls[$path]['Head'])) {

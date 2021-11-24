@@ -56,11 +56,31 @@ class Reverser
         $this->currClass = '';
         $this->prevClass = '';
 
+        if (empty($this->parts)) {
+            return $this->reverseCatchall($class);
+        }
+
         while (! empty($this->parts)) {
             $this->reverseSegments();
         }
 
         $action = $this->actions->getAction($class);
+        $parameters = $action->getRequiredParameters()
+            + $action->getOptionalParameters();
+
+        return new Reverse(
+            $class,
+            $this->verb,
+            '/' . ltrim($this->path, '/'),
+            $parameters,
+            $this->requiredParametersTotal
+        );
+    }
+
+    protected function reverseCatchall(string $class) : Reverse
+    {
+        $action = $this->actions->getAction($class);
+        $this->reverseRequiredSegments($action);
         $parameters = $action->getRequiredParameters()
             + $action->getOptionalParameters();
 

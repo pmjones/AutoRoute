@@ -12,6 +12,9 @@ use AutoRoute\Http\FooItem\Variadic\GetFooItemVariadic;
 use AutoRoute\Http\FooItems\Archive\GetFooItemsArchive;
 use AutoRoute\Http\FooItems\GetFooItems;
 use AutoRoute\Http\Get;
+use AutoRoute\Http\Getrequired;
+use AutoRoute\Http\Getoptional;
+use AutoRoute\Http\Getvariadic;
 
 class GeneratorTest extends \PHPUnit\Framework\TestCase
 {
@@ -50,6 +53,31 @@ class GeneratorTest extends \PHPUnit\Framework\TestCase
         // root
         $actual = $this->generator->generate(Get::CLASS);
         $expect = '/api';
+        $this->assertSame($expect, $actual);
+
+        // root, required parameter
+        $actual = $this->generator->generate(Getrequired::CLASS, 'catch-me');
+        $expect = '/api/catch-me';
+        $this->assertSame($expect, $actual);
+
+        // root, variadic parameter
+        $actual = $this->generator->generate(Getvariadic::CLASS, 'catch-me', 'if-you', 'can');
+        $expect = '/api/catch-me/if-you/can';
+        $this->assertSame($expect, $actual);
+
+        // root, optional parameter missing
+        $actual = $this->generator->generate(Getoptional::CLASS);
+        $expect = '/api';
+        $this->assertSame($expect, $actual);
+
+        // root, optional parameter present
+        $actual = $this->generator->generate(Getoptional::CLASS, 'catch-me');
+        $expect = '/api/catch-me';
+        $this->assertSame($expect, $actual);
+
+        // root, variadic parameter
+        $actual = $this->generator->generate(Getvariadic::CLASS, 'catch-me', 'if-you', 'can');
+        $expect = '/api/catch-me/if-you/can';
         $this->assertSame($expect, $actual);
 
         // parameter types

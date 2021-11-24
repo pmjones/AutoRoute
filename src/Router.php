@@ -30,6 +30,8 @@ class Router
 
     protected array $headers = [];
 
+    protected array $messages = [];
+
     public function __construct(
         protected Config $config,
         protected Actions $actions,
@@ -45,24 +47,23 @@ class Router
 
     public function route(string $verb, string $path) : Route
     {
-        $this->log("{$verb} {$path}");
         $this->verb = ucfirst(strtolower($verb));
         $this->subNamespace = '';
         $this->class = '';
         $this->action = new Action('', [], []);
         $this->arguments = [];
+        $this->messages = [];
+        $this->log("{$verb} {$path}");
 
         try {
             $this->capture($path);
             return new Route(
                 $this->action->getClass(),
                 $this->config->method,
-                $this->arguments
+                $this->arguments,
+                messages: $this->messages,
             );
         } catch (Throwable $e) {
-            $messages = ($this->logger instanceof Logger)
-                ? $this->logger->getMessages()
-                : [];
             return new Route(
                 $this->class,
                 $this->config->method,
@@ -70,7 +71,7 @@ class Router
                 get_class($e),
                 $e,
                 $this->headers,
-                $messages,
+                $this->messages,
             );
         }
     }
@@ -101,25 +102,66 @@ class Router
 
     protected function captureNextSegment() : void
     {
+        $subNamespace = '';
+
         // capture next segment as a subnamespace
         if (! empty($this->segments)) {
-            $segment = $this->segmentToNamespace(array_shift($this->segments));
+            $segment = $this->segmentToNamespace(reset($this->segments));
             $this->log("candidate namespace segment: {$segment}");
-            $this->subNamespace .= '\\' . $segment;
+            $subNamespace = $this->subNamespace . '\\' . $segment;
         }
 
-        $this->log("find subnamespace: {$this->subNamespace}");
+        $this->log("find subnamespace: {$subNamespace}");
 
         // does the subnamespace exist?
-        if (! $this->actions->hasSubNamespace($this->subNamespace)) {
-            // no, so no need to keep matching
-            $ns = rtrim($this->config->namespace, '\\') . $this->subNamespace;
+        if (! $this->actions->hasSubNamespace($subNamespace)) {
+            $ns = rtrim($this->config->namespace, '\\') . $subNamespace;
             $this->log('subnamespace not found');
+
+            // are we are the very top of the url?
+            if ($this->subNamespace === '') {
+                // yes, try to capture arguments for it
+                $this->captureCatchallClass();
+                return;
+            }
+
+            // no, so no need to keep matching
             throw new Exception\NotFound("Not a known namespace: {$ns}");
         }
 
         $this->log('subnamespace found');
+        $this->subNamespace = $subNamespace;
+        array_shift($this->segments);
         $this->captureMainClass();
+    }
+
+    protected function captureCatchallClass() : void
+    {
+        $expect = $this->actions->getClass($this->verb, $this->subNamespace);
+        $this->log("find catchall class: {$expect}");
+        $class = $this->actions->hasAction($this->verb, $this->subNamespace);
+
+        if ($class === null) {
+            $this->log('catchall class not found');
+            throw new Exception\NotFound("Catchall class for {$this->verb} not found");
+        }
+
+        $this->log('catchall class found');
+        $this->class = $class;
+        $this->action = $this->actions->getAction($this->class);
+
+        $this->log('capture all segments as argments');
+
+        $this->captureRequiredArguments();
+        $this->captureOptionalArguments();
+
+        if (empty($this->segments)) {
+            return;
+        }
+
+        $this->log('leftover segments');
+        $class = $this->action->getClass();
+        throw new Exception\NotFound("Too many router segments for {$class}");
     }
 
     protected function captureMainClass() : void
@@ -328,6 +370,7 @@ class Router
 
     protected function log(string $message) : void
     {
+        $this->messages[] = $message;
         $this->logger->debug($message);
     }
 }

@@ -268,6 +268,46 @@ a `Head*` class for every possible `Get*` action.
 However, you may still define any `Head*` action class you like, and AutoRoute
 will use it.
 
+### Root-Level Catchall
+
+Sometimes you will want the root HTTP method (e.g., GET) to catch all requests
+that cannot be routed to the initial subnamespace.
+
+To do so, add one or more parameters, whether required, optional, or variadic,
+to a root-level HTTP method class. If the _Router_ examines the URL and finds
+the first segment does not map to a subnamespace, it will attempt to match all
+segments to that root-level HTTP method.
+
+For example, consider this `Get` class ...
+
+```php
+namespace Project\Http;
+
+class Get
+{
+    public function __invoke(string ...$args)
+    {
+        // do something with $args
+    }
+}
+```
+
+... and this request:
+
+```
+GET /foo/bar/baz
+```
+
+Normally, the _Router_ would look for `Project\Http\Foo\GetFoo` based on the
+first segment. However, if the `Project\Http\Foo` subnamespace does not exist,
+the _Router_ will fall back to `Project\Http\Get` and try to pass all of the URL
+segments (`'foo', 'bar', 'baz'`) to it. (This may yet fail, such as when there
+are not enough parameters to receive all the segments.)
+
+Note that if the initial segment *does* correspond to a subnamespace, that will
+take precedence over the root-level catchall.
+
+
 ## Usage
 
 Instantiate the AutoRoute container class with the top-level HTTP action
@@ -298,7 +338,7 @@ request method verb and the path string to get back a _Route_:
 
 ```php
 $router = $autoRoute->getRouter();
-$route = $router->route($request->method, $request->url[PHP_URL_PATH]);
+$route = $router->route($request->method->name, $request->url->path);
 ```
 
 You can then dispatch to the action class method using the returned _Route_
@@ -342,19 +382,16 @@ switch ($route->error) {
 
 ## Debugging
 
-To see how the _Router_ gets where it does, call its `getLogger()` method,
-then get the array of logger messages from the default _AutoRoute\Logger_:
+To see how the _Router_ gets where it does, examine the _Route_ `$messages`
+property:
 
 ```php
-$route = $router->route($request->method, $request->path);
-$logger = $router->getLogger();
-print_r($logger->getMessages());
+$route = $router->route($request->method->name, $request->url->path);
+print_r($route->messages);
 ```
 
-> **Note:**
->
-> You may inject a custom PSR-3 _LoggerInterface_ implementation factory as part
-> of [custom configuration](#custom-configuration).
+In addition, you may inject a custom PSR-3 _LoggerInterface_ implementation
+factory as part of [custom configuration](#custom-configuration).
 
 ## Generating Route Paths
 

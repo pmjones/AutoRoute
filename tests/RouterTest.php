@@ -13,7 +13,9 @@ use AutoRoute\Http\FooItem\Variadic\GetFooItemVariadic;
 use AutoRoute\Http\FooItems\Archive\GetFooItemsArchive;
 use AutoRoute\Http\FooItems\GetFooItems;
 use AutoRoute\Http\Get;
-use AutoRoute\Http\Fake;
+use AutoRoute\Http\Getoptional;
+use AutoRoute\Http\Getrequired;
+use AutoRoute\Http\Getvariadic;
 use AutoRoute\Http\Repo\GetRepo;
 use AutoRoute\Http\Repo\Issue\Comment\Add\GetRepoIssueCommentAdd;
 use AutoRoute\Http\Repo\Issue\Comment\GetRepoIssueComment;
@@ -286,6 +288,55 @@ class RouterTest extends \PHPUnit\Framework\TestCase
     {
         $route = $this->router->route('GET', '/api');
         $this->assertSame(Get::CLASS, $route->class);
+        $this->assertEmpty($route->error);
+    }
+
+    public function testRoot_requiredParam()
+    {
+        $route = $this->router->route('GETREQUIRED', '/api/catch-me');
+        $this->assertSame(Getrequired::CLASS, $route->class);
+        $this->assertSame(['catch-me'], $route->arguments);
+        $this->assertEmpty($route->error);
+
+        // too many segments
+        $route = $this->router->route('GETREQUIRED', '/api/catch-me/too-many');
+        $this->assertRouteError(
+            Exception\NotFound::CLASS,
+            'Too many router segments for AutoRoute\Http\Getrequired',
+            $route
+        );
+    }
+
+    public function testRoot_optionalParam()
+    {
+        $route = $this->router->route('GETOPTIONAL', '/api');
+        $this->assertSame(Getoptional::CLASS, $route->class);
+        $this->assertEmpty($route->error);
+
+        $route = $this->router->route('GETOPTIONAL', '/api/catch-me');
+        $this->assertSame(Getoptional::CLASS, $route->class);
+        $this->assertSame(['catch-me'], $route->arguments);
+        $this->assertEmpty($route->error);
+
+        // too many segments
+        $route = $this->router->route('GETOPTIONAL', '/api/catch-me/too-many');
+        $this->assertRouteError(
+            Exception\NotFound::CLASS,
+            'Too many router segments for AutoRoute\Http\Getoptional',
+            $route
+        );
+    }
+
+    public function testRoot_variadicParam()
+    {
+        $route = $this->router->route('GETVARIADIC', '/api');
+        $this->assertSame(Getvariadic::CLASS, $route->class);
+        $this->assertEmpty($route->error);
+
+        $route = $this->router->route('GETVARIADIC', '/api/catch-me/if-you/can');
+        $this->assertSame(Getvariadic::CLASS, $route->class);
+        $this->assertSame(['catch-me', 'if-you', 'can'], $route->arguments);
+        $this->assertEmpty($route->error);
     }
 
     public function testVariadicParam()

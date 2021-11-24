@@ -87,6 +87,18 @@ class DumperTest extends \PHPUnit\Framework\TestCase
             'Get' => 'AutoRoute\\Http\\Repo\\Issue\\Comment\\GetRepoIssueComment',
             'Head' => 'AutoRoute\\Http\\Repo\\Issue\\Comment\\GetRepoIssueComment',
           ),
+          '/api/{string:name}' =>
+          array (
+            'Getrequired' => 'AutoRoute\\Http\\Getrequired',
+          ),
+          '/api[/{...string:args}]' =>
+          array (
+            'Getvariadic' => 'AutoRoute\\Http\\Getvariadic',
+          ),
+          '/api[/{string:name}]' =>
+          array (
+            'Getoptional' => 'AutoRoute\\Http\\Getoptional',
+          ),
         );
 
         $actual = $dumper->dump();
@@ -107,6 +119,14 @@ class DumperTest extends \PHPUnit\Framework\TestCase
           array (
             'Get' => 'AutoRoute\\Http\\Get',
             'Head' => 'AutoRoute\\Http\\Get',
+          ),
+          '/[{...string:args}]' =>
+          array (
+            'Getvariadic' => 'AutoRoute\\Http\\Getvariadic',
+          ),
+          '/[{string:name}]' =>
+          array (
+            'Getoptional' => 'AutoRoute\\Http\\Getoptional',
           ),
           '/admin/dashboard' =>
           array (
@@ -173,6 +193,10 @@ class DumperTest extends \PHPUnit\Framework\TestCase
           array (
             'Get' => 'AutoRoute\\Http\\Repo\\Issue\\Comment\\GetRepoIssueComment',
             'Head' => 'AutoRoute\\Http\\Repo\\Issue\\Comment\\GetRepoIssueComment',
+          ),
+          '/{string:name}' =>
+          array (
+            'Getrequired' => 'AutoRoute\\Http\\Getrequired',
           ),
         );
 
