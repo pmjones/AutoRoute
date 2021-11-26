@@ -268,46 +268,6 @@ a `Head*` class for every possible `Get*` action.
 However, you may still define any `Head*` action class you like, and AutoRoute
 will use it.
 
-### Root-Level Catchall
-
-Sometimes you will want the root HTTP method (e.g., GET) to catch all requests
-that cannot be routed to the initial subnamespace.
-
-To do so, add one or more parameters, whether required, optional, or variadic,
-to a root-level HTTP method class. If the _Router_ examines the URL and finds
-the first segment does not map to a subnamespace, it will attempt to match all
-segments to that root-level HTTP method.
-
-For example, consider this `Get` class ...
-
-```php
-namespace Project\Http;
-
-class Get
-{
-    public function __invoke(string ...$args)
-    {
-        // do something with $args
-    }
-}
-```
-
-... and this request:
-
-```
-GET /foo/bar/baz
-```
-
-Normally, the _Router_ would look for `Project\Http\Foo\GetFoo` based on the
-first segment. However, if the `Project\Http\Foo` subnamespace does not exist,
-the _Router_ will fall back to `Project\Http\Get` and try to pass all of the URL
-segments (`'foo', 'bar', 'baz'`) to it. (This may yet fail, such as when there
-are not enough parameters to receive all the segments.)
-
-Note that if the initial segment *does* correspond to a subnamespace, that will
-take precedence over the root-level catchall.
-
-
 ## Usage
 
 Instantiate the AutoRoute container class with the top-level HTTP action

@@ -121,7 +121,7 @@ class Router
             // are we are the very top of the url?
             if ($this->subNamespace === '') {
                 // yes, try to capture arguments for it
-                $this->captureCatchallClass();
+                $this->captureRootClass();
                 return;
             }
 
@@ -135,22 +135,33 @@ class Router
         $this->captureMainClass();
     }
 
-    protected function captureCatchallClass() : void
+    protected function captureRootClass() : void
     {
         $expect = $this->actions->getClass($this->verb, $this->subNamespace);
-        $this->log("find catchall class: {$expect}");
+        $this->log("find root class: {$expect}");
         $class = $this->actions->hasAction($this->verb, $this->subNamespace);
 
         if ($class === null) {
-            $this->log('catchall class not found');
-            throw new Exception\NotFound("Catchall class for {$this->verb} not found");
+            $this->log('root class not found');
+
+            $allowed = $this->actions->getAllowed($this->subNamespace);
+
+            if (empty($allowed)) {
+                throw new Exception\NotFound("No actions found");
+            }
+
+            $verb = strtoupper($this->verb);
+            $this->headers = ['allowed' => implode(',', $allowed)];
+            throw new Exception\MethodNotAllowed(
+                "{$verb} action not found"
+            );
         }
 
-        $this->log('catchall class found');
+        $this->log('root class found');
         $this->class = $class;
         $this->action = $this->actions->getAction($this->class);
 
-        $this->log('capture all segments as argments');
+        $this->log('capture all segments as arguments');
 
         $this->captureRequiredArguments();
         $this->captureOptionalArguments();
