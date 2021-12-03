@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace AutoRoute;
 
+use JsonSerializable;
 use Throwable;
 
 /**
@@ -21,7 +22,7 @@ use Throwable;
  * @property-read array $headers
  * @property-read array $messages
  */
-class Route
+class Route implements JsonSerializable
 {
     public function __construct(
         protected string $class,
@@ -40,6 +41,11 @@ class Route
     }
 
     public function asArray() : array
+    {
+        return get_object_vars($this);
+    }
+
+    public function jsonSerialize() : mixed
     {
         return get_object_vars($this);
     }
