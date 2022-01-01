@@ -1,5 +1,18 @@
 # Change Log
 
+## NEXT
+
+- Added Route::asArray()
+
+- The Route now carries the Router messages that led to the route
+
+- Added invokable helper class for route generation
+
+- Added support for root-level catchalls with params
+
+- Route is now JsonSerializable
+
+
 ## 2.0.0
 
 Initial release.

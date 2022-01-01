@@ -9,7 +9,7 @@ class Helper
     {
     }
 
-    public function __invoke(string $class, ...$values) : string
+    public function __invoke(string $class, mixed ...$values) : string
     {
         return $this->generator->generate($class, ...$values);
     }
