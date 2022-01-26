@@ -25,6 +25,11 @@ class RouteTest extends \PHPUnit\Framework\TestCase
             'headers' => [],
             'messages' => [],
         ];
+
         $this->assertSame($expect, $route->asArray());
+
+        $expect = json_encode($expect);
+        $actual = json_encode($route);
+        $this->assertSame($expect, $actual);
     }
 }
