@@ -47,4 +47,45 @@ class GetCompanyEmployeeAction
 
         $this->assertSame($expect, $code);
     }
+
+    public function testWordSeparation()
+    {
+        $autoRoute = new AutoRoute(
+            namespace: 'AutoRoute\\Http',
+            directory: __DIR__ . DIRECTORY_SEPARATOR . 'Http',
+        );
+
+        $creator = $autoRoute->getCreator();
+
+        $template = file_get_contents(
+            dirname(__DIR__) . '/resources/templates/action.tpl'
+        );
+
+        [$file, $code] = $creator->create(
+            'GET',
+            '/foo-bar/{id}',
+            $template
+        );
+
+        $expect = str_replace(
+            '/',
+            DIRECTORY_SEPARATOR,
+            __DIR__ . DIRECTORY_SEPARATOR . 'Http/FooBar/GetFooBar.php'
+        );
+
+        $this->assertSame($expect, $file);
+
+        $expect = '<?php
+namespace AutoRoute\Http\FooBar;
+
+class GetFooBar
+{
+    public function __invoke($id)
+    {
+    }
+}
+';
+
+        $this->assertSame($expect, $code);
+    }
 }
