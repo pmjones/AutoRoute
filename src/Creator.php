@@ -34,7 +34,7 @@ class Creator
     public function parse(string $verb, string $path) : array
     {
         $segments = explode('/', trim($path, '/'));
-        $subNamespaces = [];
+        $namespace = [];
         $parameters = [];
 
         while (! empty($segments)) {
@@ -47,16 +47,10 @@ class Creator
 
             $segment = str_replace($this->config->wordSeparator, ' ', $segment);
             $segment = str_replace(' ', '', ucwords($segment));
-            $subNamespaces[] = $segment;
+            $namespace[] = $segment;
         }
 
-        $namespace = '';
-
-        foreach ($subNamespaces as $subNamespace) {
-            $namespace .= ucfirst(strtolower($subNamespace)) . '\\';
-        }
-
-        $namespace = rtrim($namespace, '\\');
+        $namespace = implode('\\', $namespace);
 
         $class = ucfirst(strtolower($verb))
             . str_replace('\\', '', $namespace)
