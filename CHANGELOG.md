@@ -1,6 +1,13 @@
 # Change Log
 
-## NEXT
+## 2.1.1
+
+- Improve capitalization logic on word-separated segments in Creator
+
+- Improve json-encodability of Route::$exception
+
+
+## 2.1.0
 
 - Added Route::asArray()
 
