@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace AutoRoute;
 
 use JsonSerializable;
+use pmjones\ThrowableProperties;
 use Throwable;
 
 /**
@@ -47,6 +48,12 @@ class Route implements JsonSerializable
 
     public function jsonSerialize() : mixed
     {
-        return get_object_vars($this);
+        $array = $this->asArray();
+
+        if ($array['exception'] !== null) {
+            $array['exception'] = new ThrowableProperties($array['exception']);
+        }
+
+        return $array;
     }
 }
