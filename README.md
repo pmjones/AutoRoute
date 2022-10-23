@@ -415,7 +415,7 @@ fully-formed only at the moment the Action is called, so it must be passed in
 some way other than via the constructor.
 
 Typically, these kinds of parameters are passed at the moment the action is
-called, which means they must be part of the aciton method signature. However,
+called, which means they must be part of the action method signature. However,
 AutoRoute will see that parameter and incorrectly interpret it as a dynamic
 segment; for example:
 
