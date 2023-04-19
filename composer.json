@@ -26,7 +26,8 @@
         "phpstan/phpstan": "^0.12.82"
     },
     "bin": [
-        "bin/autoroute-dump.php"
+        "bin/autoroute-dump.php",
+        "bin/autoroute-create.php"
     ],
     "scripts": {
         "test": "./vendor/bin/phpunit",
